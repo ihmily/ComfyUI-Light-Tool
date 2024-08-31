@@ -1077,10 +1077,10 @@
         3032.758291504359,
         241.44318903759142
       ],
-      "size": [
-        315,
-        314.00004959106445
-      ],
+      "size": {
+        "0": 315,
+        "1": 314.00006103515625
+      },
       "flags": {},
       "order": 7,
       "mode": 0,
@@ -1371,7 +1371,7 @@
   ],
   "groups": [
     {
-      "title": "加载透明抠图",
+      "title": "加载透明抠图 / Load transparent cutout image",
       "bounding": [
         614,
         -209,
@@ -1383,7 +1383,7 @@
       "locked": false
     },
     {
-      "title": "加载透明蒙版",
+      "title": "加载和反转透明蒙版 / Load and Reverse Transparent Mask",
       "bounding": [
         1778,
         -211,
@@ -1395,7 +1395,7 @@
       "locked": false
     },
     {
-      "title": "加载蒙版图像",
+      "title": "加载蒙版图像 / Load mask image",
       "bounding": [
         618,
         608,
@@ -1407,7 +1407,7 @@
       "locked": false
     },
     {
-      "title": "添加纯色背景",
+      "title": "添加纯色背景 / Add solid color background",
       "bounding": [
         1785,
         615,
@@ -1419,7 +1419,7 @@
       "locked": false
     },
     {
-      "title": "图片覆盖",
+      "title": "图片覆盖 / Image Overlay",
       "bounding": [
         3008,
         -206,
