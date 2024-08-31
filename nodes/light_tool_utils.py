@@ -1,3 +1,9 @@
+"""
+@author: Hmily
+@title: ComfyUI-Light-Tool
+@nickname: ComfyUI-Light-Tool
+@description: An awesome light image processing tool nodes for ComfyUI.
+"""
 from typing import Union, List
 import cv2
 import numpy as np
