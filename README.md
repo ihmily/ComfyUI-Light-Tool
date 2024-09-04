@@ -39,7 +39,7 @@ Here is version 1.0.0
 
 **Example:**
 
-![example_3.jpg](D:\Git仓库\Github\ComfyUI-Light-Tool\demo\images\example_3.jpg)
+![example_3.jpg](./demo/images/example_3.jpg)
 
 ![example_4.jpg](./demo/images/example_4.jpg)
 
