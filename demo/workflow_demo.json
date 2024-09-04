@@ -1,6 +1,6 @@
 {
-  "last_node_id": 76,
-  "last_link_id": 94,
+  "last_node_id": 81,
+  "last_link_id": 101,
   "nodes": [
     {
       "id": 11,
@@ -59,7 +59,7 @@
           "name": "images",
           "type": "IMAGE",
           "link": 6,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -78,14 +78,14 @@
         "1": 246
       },
       "flags": {},
-      "order": 29,
+      "order": 28,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
           "link": 8,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -104,7 +104,7 @@
         "1": 26
       },
       "flags": {},
-      "order": 10,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -143,7 +143,7 @@
         "1": 46
       },
       "flags": {},
-      "order": 9,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -196,7 +196,7 @@
           "name": "images",
           "type": "IMAGE",
           "link": 3,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -215,14 +215,14 @@
         "1": 246
       },
       "flags": {},
-      "order": 28,
+      "order": 27,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
           "link": 27,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -289,7 +289,7 @@
           "name": "images",
           "type": "IMAGE",
           "link": 15,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -315,7 +315,7 @@
           "name": "images",
           "type": "IMAGE",
           "link": 40,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -336,7 +336,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 12,
+      "order": 11,
       "mode": 0,
       "inputs": [
         {
@@ -381,7 +381,7 @@
           "name": "images",
           "type": "IMAGE",
           "link": 44,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -400,14 +400,14 @@
         "1": 246
       },
       "flags": {},
-      "order": 13,
+      "order": 12,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
           "link": 55,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -426,14 +426,14 @@
         "1": 246
       },
       "flags": {},
-      "order": 30,
+      "order": 29,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
           "link": 51,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -490,7 +490,7 @@
         "1": 55.33382034301758
       },
       "flags": {},
-      "order": 11,
+      "order": 10,
       "mode": 0,
       "inputs": [
         {
@@ -528,7 +528,7 @@
         "1": 26
       },
       "flags": {},
-      "order": 14,
+      "order": 13,
       "mode": 0,
       "inputs": [
         {
@@ -557,150 +557,6 @@
       }
     },
     {
-      "id": 61,
-      "type": "Light-Tool: ImageMaskApply",
-      "pos": [
-        2145.0999319666503,
-        692.8314327096114
-      ],
-      "size": {
-        "0": 394.79998779296875,
-        "1": 46
-      },
-      "flags": {},
-      "order": 15,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 70,
-          "label": "image",
-          "slot_index": 0
-        },
-        {
-          "name": "mask",
-          "type": "IMAGE",
-          "link": 69,
-          "label": "mask"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "links": [
-            71,
-            86
-          ],
-          "shape": 3,
-          "label": "image",
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "Light-Tool: ImageMaskApply"
-      }
-    },
-    {
-      "id": 63,
-      "type": "PreviewImage",
-      "pos": [
-        2600.0999319666503,
-        690.8314327096114
-      ],
-      "size": {
-        "0": 243.14466857910156,
-        "1": 281.1708984375
-      },
-      "flags": {},
-      "order": 25,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 71,
-          "label": "images"
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PreviewImage"
-      }
-    },
-    {
-      "id": 59,
-      "type": "PreviewImage",
-      "pos": [
-        2609.0999319666503,
-        1025.831432709613
-      ],
-      "size": {
-        "0": 241.28414916992188,
-        "1": 335.0798645019531
-      },
-      "flags": {},
-      "order": 31,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 85,
-          "label": "images"
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PreviewImage"
-      }
-    },
-    {
-      "id": 68,
-      "type": "Light-Tool: ChangeBackground",
-      "pos": [
-        2148.0999319666503,
-        815.8314327096114
-      ],
-      "size": {
-        "0": 393.128662109375,
-        "1": 154
-      },
-      "flags": {},
-      "order": 26,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 86,
-          "label": "image",
-          "slot_index": 0
-        }
-      ],
-      "outputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "links": [
-            85
-          ],
-          "shape": 3,
-          "label": "image",
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "Light-Tool: ChangeBackground"
-      },
-      "widgets_values": [
-        "#438EDB",
-        true,
-        "255",
-        "255",
-        "255"
-      ]
-    },
-    {
       "id": 75,
       "type": "PreviewImage",
       "pos": [
@@ -712,14 +568,14 @@
         "1": 246
       },
       "flags": {},
-      "order": 27,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
           "link": 94,
-          "label": "images"
+          "label": "图像"
         }
       ],
       "properties": {
@@ -738,7 +594,7 @@
         "1": 66
       },
       "flags": {},
-      "order": 16,
+      "order": 14,
       "mode": 0,
       "inputs": [
         {
@@ -801,7 +657,7 @@
             1
           ],
           "shape": 3,
-          "label": "IMAGE",
+          "label": "图像",
           "slot_index": 0
         },
         {
@@ -809,7 +665,7 @@
           "type": "MASK",
           "links": null,
           "shape": 3,
-          "label": "MASK"
+          "label": "遮罩"
         }
       ],
       "properties": {
@@ -842,14 +698,14 @@
             2
           ],
           "shape": 3,
-          "label": "IMAGE"
+          "label": "图像"
         },
         {
           "name": "MASK",
           "type": "MASK",
           "links": null,
           "shape": 3,
-          "label": "MASK"
+          "label": "遮罩"
         }
       ],
       "properties": {
@@ -880,7 +736,7 @@
           "type": "IMAGE",
           "links": [],
           "shape": 3,
-          "label": "IMAGE",
+          "label": "图像",
           "slot_index": 0
         },
         {
@@ -890,7 +746,7 @@
             4
           ],
           "shape": 3,
-          "label": "MASK",
+          "label": "遮罩",
           "slot_index": 1
         }
       ],
@@ -927,7 +783,7 @@
             59
           ],
           "shape": 3,
-          "label": "IMAGE",
+          "label": "图像",
           "slot_index": 0
         },
         {
@@ -935,90 +791,7 @@
           "type": "MASK",
           "links": [],
           "shape": 3,
-          "label": "MASK",
-          "slot_index": 1
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "dog_mask.png",
-        "image"
-      ]
-    },
-    {
-      "id": 57,
-      "type": "LoadImage",
-      "pos": [
-        1789.0999319666528,
-        684.8314327096114
-      ],
-      "size": {
-        "0": 315,
-        "1": 314
-      },
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            70
-          ],
-          "shape": 3,
-          "label": "IMAGE",
-          "slot_index": 0
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null,
-          "shape": 3,
-          "label": "MASK"
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "dog_rgba.png",
-        "image"
-      ]
-    },
-    {
-      "id": 62,
-      "type": "LoadImage",
-      "pos": [
-        1787.0999319666528,
-        1041.831432709613
-      ],
-      "size": {
-        "0": 315,
-        "1": 314
-      },
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            69
-          ],
-          "shape": 3,
-          "label": "IMAGE",
-          "slot_index": 0
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": [],
-          "shape": 3,
-          "label": "MASK",
+          "label": "遮罩",
           "slot_index": 1
         }
       ],
@@ -1042,7 +815,7 @@
         "1": 314.00006103515625
       },
       "flags": {},
-      "order": 6,
+      "order": 4,
       "mode": 0,
       "outputs": [
         {
@@ -1052,14 +825,14 @@
             91
           ],
           "shape": 3,
-          "label": "IMAGE"
+          "label": "图像"
         },
         {
           "name": "MASK",
           "type": "MASK",
           "links": null,
           "shape": 3,
-          "label": "MASK"
+          "label": "遮罩"
         }
       ],
       "properties": {
@@ -1082,7 +855,7 @@
         "1": 314.00006103515625
       },
       "flags": {},
-      "order": 7,
+      "order": 5,
       "mode": 0,
       "outputs": [
         {
@@ -1092,14 +865,14 @@
             92
           ],
           "shape": 3,
-          "label": "IMAGE"
+          "label": "图像"
         },
         {
           "name": "MASK",
           "type": "MASK",
           "links": null,
           "shape": 3,
-          "label": "MASK"
+          "label": "遮罩"
         }
       ],
       "properties": {
@@ -1122,7 +895,7 @@
         "1": 314
       },
       "flags": {},
-      "order": 8,
+      "order": 6,
       "mode": 0,
       "outputs": [
         {
@@ -1132,14 +905,14 @@
             93
           ],
           "shape": 3,
-          "label": "IMAGE"
+          "label": "图像"
         },
         {
           "name": "MASK",
           "type": "MASK",
           "links": null,
           "shape": 3,
-          "label": "MASK"
+          "label": "遮罩"
         }
       ],
       "properties": {
@@ -1149,6 +922,152 @@
         "dog_mask.png",
         "image"
       ]
+    },
+    {
+      "id": 59,
+      "type": "PreviewImage",
+      "pos": [
+        2674,
+        929
+      ],
+      "size": {
+        "0": 241.28414916992188,
+        "1": 335.0798645019531
+      },
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 98,
+          "label": "图像",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 79,
+      "type": "Light-Tool: LoadImage",
+      "pos": [
+        1822,
+        924
+      ],
+      "size": [
+        315,
+        338.0000190734863
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            99,
+            101
+          ],
+          "shape": 3,
+          "label": "image",
+          "slot_index": 0
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": null,
+          "shape": 3,
+          "label": "mask"
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Light-Tool: LoadImage"
+      },
+      "widgets_values": [
+        "dog_rgba.png",
+        true,
+        "image"
+      ]
+    },
+    {
+      "id": 78,
+      "type": "Light-Tool: AddBackgroundV2",
+      "pos": [
+        2211,
+        1062
+      ],
+      "size": [
+        349.07917797377104,
+        305.7978240357497
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 99,
+          "label": "image"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            98
+          ],
+          "shape": 3,
+          "label": "image",
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Light-Tool: AddBackgroundV2"
+      },
+      "widgets_values": [
+        "#64b5f6",
+        true,
+        255,
+        255,
+        255,
+        false,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 81,
+      "type": "PreviewImage",
+      "pos": [
+        2206,
+        763
+      ],
+      "size": [
+        355.735209043708,
+        246
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 101,
+          "label": "图像"
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
     }
   ],
   "links": [
@@ -1297,46 +1216,6 @@
       "IMAGE"
     ],
     [
-      69,
-      62,
-      0,
-      61,
-      1,
-      "IMAGE"
-    ],
-    [
-      70,
-      57,
-      0,
-      61,
-      0,
-      "IMAGE"
-    ],
-    [
-      71,
-      61,
-      0,
-      63,
-      0,
-      "IMAGE"
-    ],
-    [
-      85,
-      68,
-      0,
-      59,
-      0,
-      "IMAGE"
-    ],
-    [
-      86,
-      61,
-      0,
-      68,
-      0,
-      "IMAGE"
-    ],
-    [
       91,
       72,
       0,
@@ -1365,6 +1244,30 @@
       76,
       0,
       75,
+      0,
+      "IMAGE"
+    ],
+    [
+      98,
+      78,
+      0,
+      59,
+      0,
+      "IMAGE"
+    ],
+    [
+      99,
+      79,
+      0,
+      78,
+      0,
+      "IMAGE"
+    ],
+    [
+      101,
+      79,
+      0,
+      81,
       0,
       "IMAGE"
     ]

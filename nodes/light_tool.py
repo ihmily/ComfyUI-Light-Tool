@@ -6,10 +6,141 @@
 """
 import sys
 import os
+import io
+import hashlib
+import httpx
+from PIL import ImageSequence, ImageOps
 
+from torchvision.transforms import functional
+import folder_paths
+import node_helpers
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from light_tool_utils import *
-from torchvision.transforms import functional as F
+
+
+class LoadImage:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(s):
+        input_dir = folder_paths.get_input_directory()
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+
+        return {
+            "required": {
+                "image": (sorted(files), {"image_upload": True}),
+                "keep_alpha_channel": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK")
+    RETURN_NAMES = ("image", "mask")
+    FUNCTION = "load_image"
+    CATEGORY = 'ComfyUI-Light-Tool'
+
+    @staticmethod
+    def load_image(image, keep_alpha_channel):
+        image_path = folder_paths.get_annotated_filepath(image)
+
+        img = node_helpers.pillow(Image.open, image_path)
+
+        output_images = []
+        output_masks = []
+        w, h = None, None
+
+        excluded_formats = ['MPO']
+
+        for i in ImageSequence.Iterator(img):
+            i = node_helpers.pillow(ImageOps.exif_transpose, i)
+
+            if i.mode == 'I':
+                i = i.point(lambda i: i * (1 / 255))
+
+            has_alpha = "A" in i.getbands()
+            if has_alpha and keep_alpha_channel:
+                image = i.convert("RGBA")
+            else:
+                image = i.convert("RGB")
+
+            if len(output_images) == 0:
+                w = image.size[0]
+                h = image.size[1]
+
+            if image.size[0] != w or image.size[1] != h:
+                continue
+
+            image = np.array(image).astype(np.float32) / 255.0
+            image = torch.from_numpy(image)[None,]
+            if 'A' in i.getbands():
+                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                mask = 1. - torch.from_numpy(mask)
+            else:
+                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+            output_images.append(image)
+            output_masks.append(mask.unsqueeze(0))
+
+        if len(output_images) > 1 and img.format not in excluded_formats:
+            output_image = torch.cat(output_images, dim=0)
+            output_mask = torch.cat(output_masks, dim=0)
+        else:
+            output_image = output_images[0]
+            output_mask = output_masks[0]
+        return output_image, output_mask
+
+    @classmethod
+    def IS_CHANGED(s, image):
+        image_path = folder_paths.get_annotated_filepath(image)
+        m = hashlib.sha256()
+        with open(image_path, 'rb') as f:
+            m.update(f.read())
+        return m.digest().hex()
+
+    @classmethod
+    def VALIDATE_INPUTS(s, image):
+        if not folder_paths.exists_annotated_filepath(image):
+            return "LoadImage(Light-Tool): Invalid image file: {}".format(image)
+
+        return True
+
+
+class LoadImageFromURL:
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "url": ("STRING", {"default": "https://www.comfy.org/images/ComfyUI_00000.png", "multiline": True}),
+                "keep_alpha_channel": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "load_image_from_url"
+    CATEGORY = "ComfyUI-Light-Tool"
+
+    @staticmethod
+    def load_image_from_url(url, keep_alpha_channel):
+        url_list = url.replace('，', ',').split(',')
+        image_list = []
+        for url in url_list:
+            response = httpx.get(url.strip())
+            if response.status_code == 200:
+                image_data = response.content
+                image = Image.open(io.BytesIO(image_data))
+                image = ImageOps.exif_transpose(image)
+                has_alpha = "A" in image.getbands()
+                if has_alpha and keep_alpha_channel:
+                    image = image.convert("RGBA")
+                else:
+                    image = image.convert("RGB")
+                image_list.append(pil2tensor(image))
+            else:
+                print(f"LoadImageFromURL(Light-Tool): Failed to retrieve image, status code: {response.status_code}")
+
+        image = torch.cat(image_list, dim=0)
+        return (image,)
 
 
 class ImageMaskApply:
@@ -198,7 +329,7 @@ class MaskBoundingBoxCropping:
 
             img_array = np.array(gray_image_with_alpha)
             if img_array.shape[2] != 4:
-                raise ValueError("Input image must have an alpha channel")
+                raise ValueError("MaskBoundingBoxCropping(Light-Tool): Input image must have an alpha channel")
             alpha_channel = img_array[:, :, 3]
             bbox = cv2.boundingRect(alpha_channel)
             x, y, w, h = bbox
@@ -258,11 +389,11 @@ class AddBackground:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "color_hex": ("STRING", {"default": "#FFFFFF"}),
+                "color_hex": ("STRING", {"default": "#FFFFFF", "multiline": False}),
                 "use_hex": ("BOOLEAN", {"default": True}),
-                "R": ("INT", {"default": 255, "min": 0, "max": 255}),
-                "G": ("INT", {"default": 255, "min": 0, "max": 255}),
-                "B": ("INT", {"default": 255, "min": 0, "max": 255}),
+                "R": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "G": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "B": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
             }
         }
 
@@ -274,7 +405,7 @@ class AddBackground:
     @staticmethod
     def add_background(image, color_hex, use_hex, R, G, B):
         if use_hex and not (color_hex.startswith("#") and len(color_hex) == 7):
-            raise ValueError("Invalid hexadecimal color value")
+            raise ValueError("AddBackground(Light-Tool): Invalid hexadecimal color value")
         image_list = []
         for img_tensor in image:
             img = tensor2pil(img_tensor)
@@ -324,10 +455,10 @@ class ImageOverlay:
             bg = tensor2pil(img).convert('RGB')
             alpha = tensor2pil(overlay_mask).convert('L')
 
-            image = F.to_tensor(image)
-            bg = F.to_tensor(bg)
-            bg = F.resize(bg, image.shape[-2:])
-            alpha = F.to_tensor(alpha)
+            image = functional.to_tensor(image)
+            bg = functional.to_tensor(bg)
+            bg = functional.resize(bg, image.shape[-2:])
+            alpha = functional.to_tensor(alpha)
             new_image = image * alpha + bg * (1 - alpha)
             new_image = new_image.squeeze(0).permute(1, 2, 0).numpy()
             image_list.append(pil2tensor(np2pil(new_image)))
@@ -344,16 +475,16 @@ class AddBackgroundV2:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "color_hex": ("STRING", {"default": "#FFFFFF"}),
+                "color_hex": ("STRING", {"default": "#FFFFFF", "multiline": False}),
                 "use_hex": ("BOOLEAN", {"default": True}),
-                "R": ("INT", {"default": 255, "min": 0, "max": 255}),
-                "G": ("INT", {"default": 255, "min": 0, "max": 255}),
-                "B": ("INT", {"default": 255, "min": 0, "max": 255}),
+                "R": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "G": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "B": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
                 "square": ("BOOLEAN", {"default": False}),
-                "left_margin": ("INT", {"default": 255, "min": 0, "step": 1}),
-                "right_margin": ("INT", {"default": 255, "min": 0, "step": 1}),
-                "top_margin": ("INT", {"default": 255, "min": 0, "step": 1}),
-                "bottom_margin": ("INT", {"default": 255, "min": 0, "step": 1}),
+                "left_margin": ("INT", {"default": 0, "min": 0, "step": 1, "display": "number"}),
+                "right_margin": ("INT", {"default": 0, "min": 0, "step": 1, "display": "number"}),
+                "top_margin": ("INT", {"default": 0, "min": 0, "step": 1, "display": "number"}),
+                "bottom_margin": ("INT", {"default": 0, "min": 0, "step": 1, "display": "number"}),
             }
         }
 
@@ -367,7 +498,7 @@ class AddBackgroundV2:
                           bottom_margin):
 
         if use_hex and not (color_hex.startswith("#") and len(color_hex) == 7):
-            raise ValueError("Invalid hexadecimal color value")
+            raise ValueError("AddBackgroundV2(Light-Tool): Invalid hexadecimal color value")
 
         image_list = []
         for img in image:
@@ -406,7 +537,7 @@ class IsTransparent:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "threshold": ("FLOAT", {"default": 0.01, "min": 0.01, "max": 0.99}),
+                "threshold": ("FLOAT", {"default": 0.01, "min": 0.01, "max": 0.99, "display": "slider"}),
             },
         }
 
@@ -434,29 +565,33 @@ class IsTransparent:
 
 
 NODE_CLASS_MAPPINGS = {
-    "Light-Tool: ImageMaskApply": ImageMaskApply,
+    "Light-Tool: LoadImage": LoadImage,
+    "Light-Tool: LoadImageFromURL": LoadImageFromURL,
     "Light-Tool: MaskToImage": MaskToImage,
     "Light-Tool: ImageToMask": ImageToMask,
-    "Light-Tool: MaskImageToTransparent": MaskImageToTransparent,
-    "Light-Tool: BoundingBoxCropping": BoundingBoxCropping,
-    "Light-Tool: MaskBoundingBoxCropping": MaskBoundingBoxCropping,
     "Light-Tool: InvertMask": InvertMask,
-    "Light-Tool: AddBackground": AddBackground,
+    "Light-Tool: ImageMaskApply": ImageMaskApply,
     "Light-Tool: ImageOverlay": ImageOverlay,
+    "Light-Tool: BoundingBoxCropping": BoundingBoxCropping,
+    "Light-Tool: AddBackground": AddBackground,
     "Light-Tool: AddBackgroundV2": AddBackgroundV2,
     "Light-Tool: IsTransparent": IsTransparent,
+    "Light-Tool: MaskBoundingBoxCropping": MaskBoundingBoxCropping,
+    "Light-Tool: MaskImageToTransparent": MaskImageToTransparent,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Light-Tool: ImageMaskApply": "Light-Tool: Extract Transparent Image",
+    "Light-Tool: LoadImage": "Light-Tool: Load Image",
+    "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
     "Light-Tool: MaskToImage": "Light-Tool: Mask to Image",
     "Light-Tool: ImageToMask": "Light-Tool: Image to Mask",
-    "Light-Tool: MaskImageToTransparent": "Light-Tool: Mask Background to Transparent",
-    "Light-Tool: BoundingBoxCropping": "Light-Tool: Bounding Box Cropping",
-    "Light-Tool: MaskBoundingBoxCropping": "Light-Tool: Mask Bounding Box Cropping",
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
-    "Light-Tool: AddBackground": "Light-Tool: Add solid color background",
+    "Light-Tool: ImageMaskApply": "Light-Tool: Extract Transparent Image",
     "Light-Tool: ImageOverlay": "Light-Tool: Image Overlay",
+    "Light-Tool: BoundingBoxCropping": "Light-Tool: Bounding Box Cropping",
+    "Light-Tool: AddBackground": "Light-Tool: Add solid color background",
     "Light-Tool: AddBackgroundV2": "Light-Tool: Add solid color background V2",
     "Light-Tool: IsTransparent": "Light-Tool: Is Transparent",
+    "Light-Tool: MaskBoundingBoxCropping": "Light-Tool: Mask Bounding Box Cropping",
+    "Light-Tool: MaskImageToTransparent": "Light-Tool: Mask Background to Transparent",
 }
