@@ -23,11 +23,15 @@ git clone https://github.com/ihmily/ComfyUI-Light-Tool.git
 pip install -r requirements.txt
 ```
 
+or use ComfyUI-Manager install.
+
+![example_1.jpg](./demo/images/example_1.jpg)
+
 After installation, restart ComfyUI to use this node. 
 
 Here is version 1.0.0
 
-![image-20240831204745733](./demo/images/example_1.png)
+![example_2.png](./demo/images/example_2.png)
 
 
 
@@ -35,6 +39,8 @@ Here is version 1.0.0
 
 **Example:**
 
-![Snipaste_2024-08-31_20-41-40](./demo/images/example_2.jpg)
+![example_3.jpg](D:\Git仓库\Github\ComfyUI-Light-Tool\demo\images\example_3.jpg)
+
+![example_4.jpg](./demo/images/example_4.jpg)
 
 [workflow_demo](./demo/workflow_demo.json)

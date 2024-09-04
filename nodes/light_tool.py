@@ -6,6 +6,7 @@
 """
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from light_tool_utils import *
 from torchvision.transforms import functional as F
@@ -248,7 +249,7 @@ class InvertMask:
         return (inverted_mask,)
 
 
-class ChangeBackground:
+class AddBackground:
     def __init__(self):
         pass
 
@@ -257,7 +258,7 @@ class ChangeBackground:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "color": ("STRING", {"default": "#FFFFFF"}),
+                "color_hex": ("STRING", {"default": "#FFFFFF"}),
                 "use_hex": ("BOOLEAN", {"default": True}),
                 "R": ("INT", {"default": 255, "min": 0, "max": 255}),
                 "G": ("INT", {"default": 255, "min": 0, "max": 255}),
@@ -267,17 +268,19 @@ class ChangeBackground:
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
-    FUNCTION = "image_change_bg"
+    FUNCTION = "add_background"
     CATEGORY = 'ComfyUI-Light-Tool'
 
     @staticmethod
-    def image_change_bg(image, color, use_hex, R, G, B):
+    def add_background(image, color_hex, use_hex, R, G, B):
+        if use_hex and not (color_hex.startswith("#") and len(color_hex) == 7):
+            raise ValueError("Invalid hexadecimal color value")
         image_list = []
         for img_tensor in image:
             img = tensor2pil(img_tensor)
 
             if use_hex:
-                rgb_background_color = hex_to_rgb(color)
+                rgb_background_color = hex_to_rgb(color_hex)
             else:
                 rgb_background_color = (R, G, B)
             background = Image.new("RGB", img.size, rgb_background_color)
@@ -332,6 +335,104 @@ class ImageOverlay:
         return (images,)
 
 
+class AddBackgroundV2:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "color_hex": ("STRING", {"default": "#FFFFFF"}),
+                "use_hex": ("BOOLEAN", {"default": True}),
+                "R": ("INT", {"default": 255, "min": 0, "max": 255}),
+                "G": ("INT", {"default": 255, "min": 0, "max": 255}),
+                "B": ("INT", {"default": 255, "min": 0, "max": 255}),
+                "square": ("BOOLEAN", {"default": False}),
+                "left_margin": ("INT", {"default": 255, "min": 0, "step": 1}),
+                "right_margin": ("INT", {"default": 255, "min": 0, "step": 1}),
+                "top_margin": ("INT", {"default": 255, "min": 0, "step": 1}),
+                "bottom_margin": ("INT", {"default": 255, "min": 0, "step": 1}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "add_background_v2"
+    CATEGORY = 'ComfyUI-Light-Tool'
+
+    @staticmethod
+    def add_background_v2(image, color_hex, use_hex, R, G, B, square, left_margin, right_margin, top_margin,
+                          bottom_margin):
+
+        if use_hex and not (color_hex.startswith("#") and len(color_hex) == 7):
+            raise ValueError("Invalid hexadecimal color value")
+
+        image_list = []
+        for img in image:
+            overlay = tensor2pil(img)
+            width, height = overlay.size
+            if square:
+                if width > height:
+                    top_margin += (width - height) // 2
+                    bottom_margin += (width - height) // 2
+                else:
+                    left_margin += (height - width) // 2
+                    right_margin += (height - width) // 2
+
+            background_width = width + left_margin + right_margin
+            background_height = height + top_margin + bottom_margin
+            if use_hex:
+                rgb_background_color = hex_to_rgb(color_hex)
+            else:
+                rgb_background_color = (R, G, B)
+
+            background = Image.new('RGB', (background_width, background_height), rgb_background_color)
+            background.paste(overlay, (left_margin, top_margin), overlay)
+            new_image = pil2tensor(background)
+            image_list.append(new_image)
+
+        new_image = torch.cat(image_list, dim=0)
+        return (new_image,)
+
+
+class IsTransparent:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "threshold": ("FLOAT", {"default": 0.01, "min": 0.01, "max": 0.99}),
+            },
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    FUNCTION = "is_transparent"
+    CATEGORY = 'ComfyUI-Light-Tool'
+
+    @staticmethod
+    def is_transparent(image: torch.Tensor, threshold: float):
+        img = tensor2pil(image)
+        if img.mode == 'RGBA':
+            img_array = np.array(img)
+            alpha_channel = img_array[:, :, 3] / 255.0
+            transparency_ratio = np.mean(alpha_channel < 1)
+            return (transparency_ratio > threshold,)
+        elif img.mode == 'P':
+            try:
+                transparent_index = img.info['transparency']
+                color = img.getcolor(transparent_index)
+                return (color[3] == 0,)
+            except KeyError:
+                return (False,)
+        else:
+            return (False,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: ImageMaskApply": ImageMaskApply,
     "Light-Tool: MaskToImage": MaskToImage,
@@ -340,8 +441,10 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: BoundingBoxCropping": BoundingBoxCropping,
     "Light-Tool: MaskBoundingBoxCropping": MaskBoundingBoxCropping,
     "Light-Tool: InvertMask": InvertMask,
-    "Light-Tool: ChangeBackground": ChangeBackground,
+    "Light-Tool: AddBackground": AddBackground,
     "Light-Tool: ImageOverlay": ImageOverlay,
+    "Light-Tool: AddBackgroundV2": AddBackgroundV2,
+    "Light-Tool: IsTransparent": IsTransparent,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -352,6 +455,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: BoundingBoxCropping": "Light-Tool: Bounding Box Cropping",
     "Light-Tool: MaskBoundingBoxCropping": "Light-Tool: Mask Bounding Box Cropping",
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
-    "Light-Tool: ChangeBackground": "Light-Tool: Change Background color",
+    "Light-Tool: AddBackground": "Light-Tool: Add solid color background",
     "Light-Tool: ImageOverlay": "Light-Tool: Image Overlay",
+    "Light-Tool: AddBackgroundV2": "Light-Tool: Add solid color background V2",
+    "Light-Tool: IsTransparent": "Light-Tool: Is Transparent",
 }

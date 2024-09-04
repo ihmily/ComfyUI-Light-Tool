@@ -6,13 +6,13 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 ag_path = os.path.join(os.path.dirname(__file__))
 
 
-def get_python_files(path):
-    return [f[:-3] for f in os.listdir(path) if f.endswith(".py")]
+def get_python_files(_path):
+    return [f[:-3] for f in os.listdir(_path) if f.endswith(".py")]
 
 
-def append_to_sys_path(path):
-    if path not in sys.path:
-        sys.path.append(path)
+def append_to_sys_path(_path):
+    if _path not in sys.path:
+        sys.path.append(_path)
 
 
 paths = ["nodes"]
@@ -35,5 +35,4 @@ for file in files:
     if hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS"):
         NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
 
-WEB_DIRECTORY = "web-plugin"
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
