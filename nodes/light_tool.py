@@ -10,10 +10,11 @@ import io
 import hashlib
 import httpx
 from PIL import ImageSequence, ImageOps
-
+from typing import Any
 from torchvision.transforms import functional
 import folder_paths
 import node_helpers
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from light_tool_utils import *
 
@@ -23,7 +24,7 @@ class LoadImage:
         pass
 
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls):
         input_dir = folder_paths.get_input_directory()
         files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
 
@@ -55,7 +56,7 @@ class LoadImage:
             i = node_helpers.pillow(ImageOps.exif_transpose, i)
 
             if i.mode == 'I':
-                i = i.point(lambda i: i * (1 / 255))
+                i = i.point(lambda pixel: pixel * (1 / 255))
 
             has_alpha = "A" in i.getbands()
             if has_alpha and keep_alpha_channel:
@@ -89,7 +90,7 @@ class LoadImage:
         return output_image, output_mask
 
     @classmethod
-    def IS_CHANGED(s, image):
+    def IS_CHANGED(cls, image):
         image_path = folder_paths.get_annotated_filepath(image)
         m = hashlib.sha256()
         with open(image_path, 'rb') as f:
@@ -97,7 +98,7 @@ class LoadImage:
         return m.digest().hex()
 
     @classmethod
-    def VALIDATE_INPUTS(s, image):
+    def VALIDATE_INPUTS(cls, image):
         if not folder_paths.exists_annotated_filepath(image):
             return "LoadImage(Light-Tool): Invalid image file: {}".format(image)
 
@@ -564,6 +565,197 @@ class IsTransparent:
             return (False,)
 
 
+class PhantomTankEffect:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "offset": ("INT", {"default": 128, "min": 0, "max": 255, "display": "slider"}),
+                "alpha_min": ("INT", {"default": 1, "min": 0, "max": 255, "display": "slider"}),
+                "alpha_max": ("INT", {"default": 255, "min": 0, "max": 255, "display": "slider"}),
+                "v_min": ("INT", {"default": 0, "min": 0, "max": 255, "display": "slider"}),
+                "v_max": ("INT", {"default": 255, "min": 0, "max": 255, "display": "slider"}),
+                "gray_method": (["luminosity", "average", "max", "min", "custom"], {"default": "luminosity"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "process_images"
+    CATEGORY = 'ComfyUI-Light-Tool'
+
+    @staticmethod
+    def process_images(image1: torch.Tensor, image2: torch.Tensor, offset: int, alpha_min: int, alpha_max: int,
+                       v_min: int, v_max: int, gray_method: int):
+
+        img1 = tensor2pil(image1)
+        img2 = tensor2pil(image2)
+
+        width = max(img1.width, img2.width)
+        height = max(img1.height, img2.height)
+
+        img1_gray = to_gray(img1, method=gray_method)
+        img2_gray = to_gray(img2, method=gray_method)
+
+        result_img = Image.new("RGBA", (width, height))
+
+        pixels1: Any = img1_gray.load()
+        pixels2: Any = img2_gray.load()
+        pixels_result: Any = result_img.load()
+
+        for y in range(height):
+            for x in range(width):
+                v1 = pixels1[x, y] / 2
+                v2 = pixels2[x, y] / 2 + offset
+                v1 = max(alpha_min, v1)
+                v2 = min(alpha_max - 1, v2)
+                a = alpha_max - v2 + v1
+                a = min(alpha_max, max(alpha_min, a))
+                v = v1 * v_max / a
+                v = min(v_max, max(v_min, v))
+                pixels_result[x, y] = (int(v), int(v), int(v), int(a))
+
+        result_img = pil2tensor(result_img)
+        return (result_img,)
+
+
+class MaskContourExtractor:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "color_hex": ("STRING", {"default": "#FF0000", "multiline": False}),
+                "use_hex": ("BOOLEAN", {"default": True}),
+                "R": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "G": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "B": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "contour_extractor"
+    CATEGORY = 'ComfyUI-Light-Tool'
+
+    @staticmethod
+    def contour_extractor(image, color_hex, use_hex, R, G, B):
+
+        image_pil = tensor2pil(image).convert('L')
+        image = np.array(image_pil).astype(np.uint8)
+
+        if use_hex:
+            rgb_background_color = hex_to_rgb(color_hex)
+        else:
+            rgb_background_color = (R, G, B)
+
+        _, binary_image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+        contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        contour_points = []
+        for contour in contours:
+            for point in contour:
+                contour_points.append(list(point[0]))
+
+        contour_image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        cv2.drawContours(contour_image, contours, -1, rgb_background_color, 1)
+        result_img = np2tensor(contour_image)
+        return (result_img,)
+
+
+class AdvancedSolidColorBackground:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "width": ("INT", {"default": 1024, "min": 0, "display": "number"}),
+                "height": ("INT", {"default": 1024, "min": 0, "display": "number"}),
+                "color_hex": ("STRING", {"default": "#FF0000", "multiline": False}),
+                "use_hex": ("BOOLEAN", {"default": True}),
+                "R": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "G": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "B": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "mode": (["RGB", "RGBA", "L"], {"default": "RGB"}),
+                "alpha": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "generate_bg"
+    CATEGORY = 'ComfyUI-Light-Tool'
+
+    @staticmethod
+    def generate_bg(color_hex, use_hex, width, height, R, G, B, mode, alpha):
+
+        if use_hex:
+            rgb_background_color = hex_to_rgb(color_hex)
+        else:
+            rgb_background_color = (R, G, B)
+
+        if 'A' in mode:
+            alpha_channel = alpha
+            rgb_background_color += (alpha_channel,)
+
+        image = Image.new(mode, (width, height), rgb_background_color)
+        result_img = pil2tensor(image)
+        return (result_img,)
+
+
+class ResizeImage:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "width": ("INT", {"default": 512, "min": 0, "display": "number"}),
+                "height": ("INT", {"default": 512, "min": 0, "display": "number"}),
+                "resize_method": (["LANCZOS", "BICUBIC", "NEAREST", "BILINEAR"], {"default": "LANCZOS"}),
+                "mode": (["RGB", "RGBA", "L"], {"default": "RGB"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "resize_img"
+    CATEGORY = 'ComfyUI-Light-Tool'
+
+    @staticmethod
+    def resize_img(image, width, height, resize_method, mode):
+        image = tensor2pil(image).convert(mode)
+        if width is None and height is None:
+            raise ValueError("Either new_width or new_height must be provided.")
+        elif width is not None and height is None:
+            height = int((width / image.width) * image.height)
+        elif height is not None and width is None:
+            width = int((height / image.height) * image.width)
+
+        method = {
+            "LANCZOS": Image.LANCZOS,
+            "BICUBIC": Image.BICUBIC,
+            "NEAREST": Image.NEAREST,
+            "BILINEAR": Image.BILINEAR
+        }
+
+        img_resized = image.resize((width, height), method[resize_method])
+        result_img = pil2tensor(img_resized)
+        return (result_img,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: LoadImage": LoadImage,
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
@@ -575,9 +767,13 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: BoundingBoxCropping": BoundingBoxCropping,
     "Light-Tool: AddBackground": AddBackground,
     "Light-Tool: AddBackgroundV2": AddBackgroundV2,
+    "Light-Tool: ResizeImage": ResizeImage,
     "Light-Tool: IsTransparent": IsTransparent,
     "Light-Tool: MaskBoundingBoxCropping": MaskBoundingBoxCropping,
     "Light-Tool: MaskImageToTransparent": MaskImageToTransparent,
+    "Light-Tool: PhantomTankEffect": PhantomTankEffect,
+    "Light-Tool: MaskContourExtractor": MaskContourExtractor,
+    "Light-Tool: SolidColorBackground": AdvancedSolidColorBackground,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -591,7 +787,10 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: BoundingBoxCropping": "Light-Tool: Bounding Box Cropping",
     "Light-Tool: AddBackground": "Light-Tool: Add solid color background",
     "Light-Tool: AddBackgroundV2": "Light-Tool: Add solid color background V2",
+    "Light-Tool: ResizeImage": "Light-Tool: Resize Image",
     "Light-Tool: IsTransparent": "Light-Tool: Is Transparent",
     "Light-Tool: MaskBoundingBoxCropping": "Light-Tool: Mask Bounding Box Cropping",
     "Light-Tool: MaskImageToTransparent": "Light-Tool: Mask Background to Transparent",
+    "Light-Tool: PhantomTankEffect": "Light-Tool: Generate PhantomTankEffect",
+    "Light-Tool: SolidColorBackground": "Light-Tool: SolidColorBackground",
 }

@@ -44,3 +44,37 @@ def np2pil(np_image: np.ndarray, mode: str = 'RGB') -> Image:
 def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def hex_to_bgr(hex_color):
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i + 2], 16) for i in (4, 2, 0))
+
+
+def to_gray(image, method="luminosity"):
+    if method == "luminosity":
+        # Standard weighted average method (0.299*R + 0.587*G + 0.114*B)
+        return image.convert("L")
+    else:
+        image = image.convert("RGB")
+        width, height = image.size
+        gray_image = Image.new("L", (width, height))
+
+        for x in range(width):
+            for y in range(height):
+                r, g, b = image.getpixel((x, y))
+
+                if method == "average":
+                    gray = (r + g + b) / 3
+                elif method == "max":
+                    gray = max(r, g, b)
+                elif method == "min":
+                    gray = min(r, g, b)
+                elif method == "custom":
+                    gray = 0.3 * r + 0.5 * g + 0.2 * b
+                else:
+                    raise ValueError("Unsupported grayscale conversion method.")
+
+                gray_image.putpixel((x, y), int(gray))
+
+        return gray_image
