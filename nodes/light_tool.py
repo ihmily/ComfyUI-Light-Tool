@@ -10,7 +10,7 @@ import io
 import hashlib
 import httpx
 from PIL import ImageSequence, ImageOps
-from typing import Any
+from typing import Any, Tuple
 from torchvision.transforms import functional
 import folder_paths
 import node_helpers
@@ -142,6 +142,78 @@ class LoadImageFromURL:
 
         image = torch.cat(image_list, dim=0)
         return (image,)
+
+
+class LoadImagesFromDir:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "directory": ("STRING", {"default": "please input your image dir path"}),
+            },
+            "optional": {
+                "image_load_num": ("INT", {"default": 0, "min": 0, "step": 1}),
+                "start_index": ("INT", {"default": 0, "min": 0, "step": 1}),
+                "load_always": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "keep_alpha_channel": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK", "STRING")
+    RETURN_NAMES = ("IMAGE", "MASK", "FILE PATH")
+    OUTPUT_IS_LIST = (True, True, True)
+    FUNCTION = "load_images"
+    CATEGORY = 'ComfyUI-Light-Tool'
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        if 'load_always' in kwargs and kwargs['load_always']:
+            return float("NaN")
+        else:
+            return hash(frozenset(kwargs))
+
+    @staticmethod
+    def load_images(directory: str, image_load_num: int = 0, start_index: int = 0, keep_alpha_channel: bool = False,
+                    load_always: bool = False) -> Tuple[List, List, List]:
+        if not os.path.isdir(directory):
+            raise FileNotFoundError(f"Directory '{directory}' cannot be found.")
+        dir_files = os.listdir(directory)
+        if len(dir_files) == 0:
+            raise FileNotFoundError(f"No files in directory '{directory}'.")
+
+        valid_extensions = ['.jpg', '.jpeg', '.png', '.webp']
+        dir_files = [f for f in dir_files if any(f.lower().endswith(ext) for ext in valid_extensions)]
+
+        dir_files = sorted(dir_files)
+        file_paths = [os.path.join(directory, x) for x in dir_files]
+
+        from itertools import islice
+        file_paths = list(
+            islice(file_paths, start_index, None if image_load_num == 0 else start_index + image_load_num))
+
+        images, masks = [], []
+        for image_path in file_paths:
+            with Image.open(image_path) as i:
+                i = ImageOps.exif_transpose(i)
+                has_alpha = "A" in i.getbands()
+                if has_alpha and keep_alpha_channel:
+                    image = i.convert("RGBA")
+                else:
+                    image = i.convert("RGB")
+
+                image = np.array(image).astype(np.float32) / 255.0
+                image = torch.from_numpy(image)[None,]
+
+                if 'A' in i.getbands():
+                    mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                    mask = 1. - torch.from_numpy(mask)
+                else:
+                    mask = torch.zeros((64, 64), dtype=torch.float32)
+
+                images.append(image)
+                masks.append(mask)
+
+        return images, masks, [str(image_path) for image_path in file_paths]
 
 
 class ImageMaskApply:
@@ -759,6 +831,7 @@ class ResizeImage:
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: LoadImage": LoadImage,
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
+    "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
     "Light-Tool: MaskToImage": MaskToImage,
     "Light-Tool: ImageToMask": ImageToMask,
     "Light-Tool: InvertMask": InvertMask,
@@ -779,6 +852,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: LoadImage": "Light-Tool: Load Image",
     "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
+    "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",
     "Light-Tool: MaskToImage": "Light-Tool: Mask to Image",
     "Light-Tool: ImageToMask": "Light-Tool: Image to Mask",
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
