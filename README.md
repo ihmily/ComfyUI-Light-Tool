@@ -5,6 +5,11 @@ An awesome  image processing tool  node for ComfyUI.
 
 This node offers the following image processing capabilities:
 
+- **Load Image**: Load image with alpha、Load image from url、Load image from image directory.
+- **Load Video**: Load and preview video from video url or video path.
+- **Save To OSS**: upload image and video to aliyun oss.
+- **Bounding Box Cropping**: Crop a specific area of an image based on the defined bounding box.
+
 - **Foreground Image Separation Using Mask**: Isolate the foreground image from the original image.
 - **Load Transparent Image with Cutout**: Load an image that has already been cut out (segmented) with a transparent background.
 - **Load Mask**: Import a mask file for image processing.

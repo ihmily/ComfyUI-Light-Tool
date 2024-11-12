@@ -8,12 +8,16 @@ import sys
 import os
 import io
 import hashlib
+import time
+import uuid
+
 import httpx
 from PIL import ImageSequence, ImageOps
 from typing import Any, Tuple
 from torchvision.transforms import functional
 import folder_paths
 import node_helpers
+from oss_tool import oss_upload
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from light_tool_utils import *
@@ -38,7 +42,7 @@ class LoadImage:
     RETURN_TYPES = ("IMAGE", "MASK")
     RETURN_NAMES = ("image", "mask")
     FUNCTION = "load_image"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/LoadImage'
 
     @staticmethod
     def load_image(image, keep_alpha_channel):
@@ -119,7 +123,7 @@ class LoadImageFromURL:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "load_image_from_url"
-    CATEGORY = "ComfyUI-Light-Tool"
+    CATEGORY = "ComfyUI-Light-Tool/image/LoadImage"
 
     @staticmethod
     def load_image_from_url(url, keep_alpha_channel):
@@ -163,7 +167,7 @@ class LoadImagesFromDir:
     RETURN_NAMES = ("IMAGE", "MASK", "FILE PATH")
     OUTPUT_IS_LIST = (True, True, True)
     FUNCTION = "load_images"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/LoadImage'
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):
@@ -234,7 +238,7 @@ class ImageMaskApply:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "run"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
 
     @staticmethod
     def run(image, mask):
@@ -269,7 +273,7 @@ class MaskToImage:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "mask_to_image"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/mask'
 
     @staticmethod
     def mask_to_image(mask):
@@ -297,7 +301,7 @@ class ImageToMask:
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
     FUNCTION = "image_to_mask"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/mask'
 
     @staticmethod
     def image_to_mask(image, channel):
@@ -325,7 +329,7 @@ class MaskImageToTransparent:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "mask2Transparent"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/mask'
 
     @staticmethod
     def mask2Transparent(image):
@@ -355,7 +359,7 @@ class BoundingBoxCropping:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "image_crop"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageCrop'
 
     @staticmethod
     def image_crop(image):
@@ -389,7 +393,7 @@ class MaskBoundingBoxCropping:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "mask_image_crop"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageCrop'
 
     @staticmethod
     def mask_image_crop(image):
@@ -433,7 +437,7 @@ class InvertMask:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "invert_mask"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/mask'
 
     @staticmethod
     def invert_mask(image):
@@ -473,7 +477,7 @@ class AddBackground:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "add_background"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
 
     @staticmethod
     def add_background(image, color_hex, use_hex, R, G, B):
@@ -518,7 +522,7 @@ class ImageOverlay:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "combine_images"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
 
     @staticmethod
     def combine_images(origin_image: torch.Tensor, overlay_image: torch.Tensor, overlay_mask: torch.Tensor):
@@ -564,7 +568,7 @@ class AddBackgroundV2:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "add_background_v2"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
 
     @staticmethod
     def add_background_v2(image, color_hex, use_hex, R, G, B, square, left_margin, right_margin, top_margin,
@@ -616,7 +620,7 @@ class IsTransparent:
 
     RETURN_TYPES = ("BOOLEAN",)
     FUNCTION = "is_transparent"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image'
 
     @staticmethod
     def is_transparent(image: torch.Tensor, threshold: float):
@@ -659,7 +663,7 @@ class PhantomTankEffect:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "process_images"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
 
     @staticmethod
     def process_images(image1: torch.Tensor, image2: torch.Tensor, offset: int, alpha_min: int, alpha_max: int,
@@ -716,7 +720,7 @@ class MaskContourExtractor:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "contour_extractor"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image'
 
     @staticmethod
     def contour_extractor(image, color_hex, use_hex, R, G, B):
@@ -766,7 +770,7 @@ class AdvancedSolidColorBackground:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "generate_bg"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
 
     @staticmethod
     def generate_bg(color_hex, use_hex, width, height, R, G, B, mode, alpha):
@@ -804,7 +808,7 @@ class ResizeImage:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "resize_img"
-    CATEGORY = 'ComfyUI-Light-Tool'
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageCrop'
 
     @staticmethod
     def resize_img(image, width, height, resize_method, mode):
@@ -828,13 +832,295 @@ class ResizeImage:
         return (result_img,)
 
 
+class RGB2RGBA:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "rgb2rgba"
+    CATEGORY = 'ComfyUI-Light-Tool/image'
+
+    @staticmethod
+    def rgb2rgba(image):
+        image_list = []
+        for img in image:
+            img = tensor2pil(img).convert("RGBA")
+            result_img = pil2tensor(img)
+            image_list.append(result_img)
+        new_image = torch.cat(image_list, dim=0)
+        return (new_image,)
+
+
+class RGBA2RGB:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "rgba2rgb"
+    CATEGORY = 'ComfyUI-Light-Tool/image'
+
+    @staticmethod
+    def rgba2rgb(image):
+        image_list = []
+        for img in image:
+            img = tensor2pil(img).convert("RGB")
+            result_img = pil2tensor(img)
+            image_list.append(result_img)
+        new_image = torch.cat(image_list, dim=0)
+        return (new_image,)
+
+
+class InputText:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "input_text": (
+                    "STRING", {"defaultInput": False, "multiline": True, "placeholder": "Please input text"}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text",)
+    FUNCTION = "input_text"
+    CATEGORY = 'ComfyUI-Light-Tool/Text'
+
+    @staticmethod
+    def input_text(input_text):
+        input_text = '' if not input_text else input_text.strip()
+        return (input_text,)
+
+
+class ShowText:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"defaultInput": True, "multiline": True}),
+            }
+        }
+
+    INPUT_IS_LIST = True
+    OUTPUT_NODE = True
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text",)
+    FUNCTION = "show_text"
+    CATEGORY = 'ComfyUI-Light-Tool/Text'
+    OUTPUT_IS_LIST = (True,)
+
+    @staticmethod
+    def show_text(text):
+        return {"ui": {"text": text}, "result": (text,)}
+
+
+class PreviewVideo:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "video_url": (
+                    "STRING",
+                    {"defaultInput": True, "multiline": True, "placeholder": "Please input video url"}
+                )
+            }
+        }
+
+    OUTPUT_NODE = True
+    RETURN_TYPES = ()
+    RETURN_NAMES = ("video",)
+    FUNCTION = "preview_video"
+    CATEGORY = 'ComfyUI-Light-Tool/Video'
+
+    @staticmethod
+    def preview_video(video_url):
+        return {"ui": {"video_url": [video_url]}}
+
+
+class SaveVideo:
+    def __init__(self):
+        self.output_dir = folder_paths.get_output_directory()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "video_url": ("STRING", {"defaultInput": True}),
+                "server": ("STRING", {"defaultInput": False, "default": '', "placeholder": "local server address"}),
+                "save_dir": ("STRING", {"defaultInput": False, "default": ''}),
+            }
+        }
+
+    OUTPUT_NODE = True
+    RETURN_TYPES = ()
+    RETURN_NAMES = ("video",)
+    FUNCTION = "save_video"
+    CATEGORY = 'ComfyUI-Light-Tool/Video'
+
+    def save_video(self, video_url, server, save_dir):
+        filename = str(uuid.uuid4())
+        save_file_path = os.path.join(self.output_dir, save_dir)
+        os.makedirs(save_file_path, exist_ok=True)
+        download_file(video_url, os.path.join(save_file_path, filename + ".mp4"))
+        t13 = int(time.time() * 1000)
+        server_url = server.split('?')[0].strip().rstrip('/')
+        video_url = f"{server_url}/api/view?filename={filename}.mp4&type=output&subfolder={save_dir}&t={t13}"
+        return {"ui": {"video_url": [video_url]}}
+
+
+class SaveVideoToAliyunOss:
+    def __init__(self):
+        self.output_dir = folder_paths.get_output_directory()
+        self.input_dir = folder_paths.get_input_directory()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "file": ("STRING", {"defaultInput": True}),
+                "save_name": ("STRING", {"default": ""}),
+                "endpoint": ("STRING", {"default": ""}),
+                "bucket": ("STRING", {"default": ""}),
+                "oss_access_key_id": ("STRING", {"default": ""}),
+                "oss_access_key_secret": ("STRING", {"default": ""}),
+                "oss_session_token": ("STRING", {"default": ""}),
+                "visit_endpoint": ("STRING", {"default": ""}),
+                "use_cname": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sign": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "timeout": ("INT", {"default": 0}),
+            }
+        }
+
+    OUTPUT_NODE = True
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("video_url",)
+    FUNCTION = "save_video"
+    CATEGORY = 'ComfyUI-Light-Tool/Video'
+
+    def save_video(self, file, save_name, endpoint, bucket, oss_access_key_id, oss_access_key_secret,
+                   oss_session_token, use_cname, visit_endpoint, sign, timeout):
+
+        if 'http' in file:
+            filename = save_name or file.split('?')[0].rsplit('/')[-1]
+            file_path = download_file(file, filename)
+        elif '/' not in file:
+            if os.path.exists(os.path.join(self.output_dir, file)):
+                file_path = os.path.join(self.output_dir, file)
+            else:
+                file_path = os.path.join(self.input_dir, file)
+        else:
+            file_path = file
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f'(ComfyUI-Light-Tool) {file_path} Upload file not exists')
+
+        video_url = oss_upload(
+            file_path,
+            filename=os.path.basename(file_path),
+            endpoint=endpoint,
+            bucket=bucket,
+            oss_access_key_id=oss_access_key_id,
+            oss_access_key_secret=oss_access_key_secret,
+            oss_session_token=oss_session_token,
+            is_cname=use_cname,
+            visit_endpoint=visit_endpoint,
+            sign=sign,
+            timeout=timeout
+        )
+        return (video_url,)
+
+
+class SaveToAliyunOSS:
+    def __init__(self):
+        self.output_dir = folder_paths.get_output_directory()
+        self.input_dir = folder_paths.get_input_directory()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "file": ("STRING", {"defaultInput": True}),
+                "save_name": ("STRING", {"default": ""}),
+                "endpoint": ("STRING", {"default": ""}),
+                "bucket": ("STRING", {"default": ""}),
+                "oss_access_key_id": ("STRING", {"default": ""}),
+                "oss_access_key_secret": ("STRING", {"default": ""}),
+                "oss_session_token": ("STRING", {"default": ""}),
+                "visit_endpoint": ("STRING", {"default": ""}),
+                "use_cname": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "sign": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "timeout": ("INT", {"default": 0}),
+            }
+        }
+
+    OUTPUT_NODE = True
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("file_url",)
+    FUNCTION = "save"
+    CATEGORY = 'ComfyUI-Light-Tool/OSS'
+
+    def save(self, file, save_name, endpoint, bucket, oss_access_key_id, oss_access_key_secret,
+             oss_session_token, use_cname, visit_endpoint, sign, timeout):
+
+        if 'http' in file:
+            filename = save_name or file.split('?')[0].rsplit('/')[-1]
+            file_path = download_file(file, filename)
+        elif '/' not in file:
+            if os.path.exists(os.path.join(self.output_dir, file)):
+                file_path = os.path.join(self.output_dir, file)
+            else:
+                file_path = os.path.join(self.input_dir, file)
+        else:
+            file_path = file
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f'(ComfyUI-Light-Tool/OSS) {file_path} Upload file not exists')
+
+        file_url = oss_upload(
+            file_path,
+            filename=os.path.basename(file_path),
+            endpoint=endpoint,
+            bucket=bucket,
+            oss_access_key_id=oss_access_key_id,
+            oss_access_key_secret=oss_access_key_secret,
+            oss_session_token=oss_session_token,
+            is_cname=use_cname,
+            visit_endpoint=visit_endpoint,
+            sign=sign,
+            timeout=timeout
+        )
+        return (file_url,)
+
+
 NODE_CLASS_MAPPINGS = {
+    "Light-Tool: InputText": InputText,
+    "Light-Tool: ShowText": ShowText,
     "Light-Tool: LoadImage": LoadImage,
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
     "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
     "Light-Tool: MaskToImage": MaskToImage,
     "Light-Tool: ImageToMask": ImageToMask,
     "Light-Tool: InvertMask": InvertMask,
+    "Light-Tool: RGB2RGBA": RGB2RGBA,
+    "Light-Tool: RGBA2RGB": RGBA2RGB,
     "Light-Tool: ImageMaskApply": ImageMaskApply,
     "Light-Tool: ImageOverlay": ImageOverlay,
     "Light-Tool: BoundingBoxCropping": BoundingBoxCropping,
@@ -847,15 +1133,22 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: PhantomTankEffect": PhantomTankEffect,
     "Light-Tool: MaskContourExtractor": MaskContourExtractor,
     "Light-Tool: SolidColorBackground": AdvancedSolidColorBackground,
+    "Light-Tool: PreviewVideo": PreviewVideo,
+    "Light-Tool: SaveVideo": SaveVideo,
+    "Light-Tool: SaveToAliyunOSS": SaveToAliyunOSS
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "Light-Tool: InputText": "Light-Tool: Input Text",
+    "Light-Tool: ShowText": "Light-Tool: Show Text",
     "Light-Tool: LoadImage": "Light-Tool: Load Image",
     "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
     "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",
     "Light-Tool: MaskToImage": "Light-Tool: Mask to Image",
     "Light-Tool: ImageToMask": "Light-Tool: Image to Mask",
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
+    "Light-Tool: RGB2RGBA": "Light-Tool: RGB To RGBA",
+    "Light-Tool: RGBA2RGB": "Light-Tool: RGBa To RGB",
     "Light-Tool: ImageMaskApply": "Light-Tool: Extract Transparent Image",
     "Light-Tool: ImageOverlay": "Light-Tool: Image Overlay",
     "Light-Tool: BoundingBoxCropping": "Light-Tool: Bounding Box Cropping",
@@ -867,4 +1160,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: MaskImageToTransparent": "Light-Tool: Mask Background to Transparent",
     "Light-Tool: PhantomTankEffect": "Light-Tool: Generate PhantomTankEffect",
     "Light-Tool: SolidColorBackground": "Light-Tool: SolidColorBackground",
+    "Light-Tool: PreviewVideo": "Light-Tool: Preview Video",
+    "Light-Tool: SaveVideo": "Light-Tool: Save Video",
+    "Light-Tool: SaveToAliyunOSS": "Light-Tool: Save File To Aliyun OSS"
 }

@@ -2,3 +2,5 @@ numpy
 torch
 pillow
 opencv-python
+oss2
+httpx

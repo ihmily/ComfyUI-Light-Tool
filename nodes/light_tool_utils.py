@@ -6,6 +6,7 @@
 """
 from typing import Union, List
 import cv2
+import httpx
 import numpy as np
 import torch
 from PIL import Image
@@ -78,3 +79,19 @@ def to_gray(image, method="luminosity"):
                 gray_image.putpixel((x, y), int(gray))
 
         return gray_image
+
+
+def download_file(url, file_name):
+    headers = {
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.58'
+    }
+    with httpx.Client() as client:
+        response = client.get(url, headers=headers)
+        response.raise_for_status()
+
+        with open(file_name, "wb") as file:
+            for chunk in response.iter_bytes(chunk_size=8192):
+                file.write(chunk)
+    print(f"File downloaded as {file_name}")
+    return file_name
