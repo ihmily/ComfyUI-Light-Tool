@@ -20,7 +20,7 @@ def pil2tensor(image: Image) -> torch.Tensor:
     return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
 
 
-def RGB2RGBA(image: Image, mask: Image) -> Image:
+def rgb2rgba(image: Image, mask: Image) -> Image:
     (R, G, B) = image.convert('RGB').split()
     return Image.merge('RGBA', (R, G, B, mask.convert('L')))
 

@@ -251,7 +251,7 @@ class ImageMaskApply:
             if mask_pil.size != image_pil.size:
                 raise ValueError(f"ImageMaskApply(Light-Tool): Images must have the same size. "
                                  f"{image_size}and{mask_size} is not match")
-            image_pil = RGB2RGBA(image_pil, mask_pil)
+            image_pil = rgb2rgba(image_pil, mask_pil)
             image = pil2tensor(image_pil)
             image_list.append(image)
         image = torch.cat(image_list, dim=0)
