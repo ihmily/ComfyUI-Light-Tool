@@ -11,6 +11,7 @@ import hashlib
 import time
 import uuid
 
+import numpy as np
 from PIL import ImageSequence, ImageOps
 from typing import Any, Tuple
 from torchvision.transforms import functional
@@ -302,7 +303,7 @@ class ImageToMask:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "channel": (["red", "green", "blue", "alpha"],),
+                "channel": (["red", "green", "blue", "alpha"], {"default": "red"}),
             }
         }
 
@@ -316,7 +317,11 @@ class ImageToMask:
         mask_list = []
         for img in image:
             channels = ["red", "green", "blue", "alpha"]
-            mask = img[:, :, :, channels.index(channel)]
+            if channel == "alpha":
+                img = np.array(tensor2pil(img).convert("RGBA"))
+            else:
+                img = np.array(tensor2pil(img).convert("RGB"))
+            mask = np2tensor(img[:, :, channels.index(channel)])
             mask_list.append(mask)
         mask = torch.cat(mask_list, dim=0)
         return (mask,)
@@ -1169,8 +1174,8 @@ class ImageConcat:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
+    RETURN_TYPES = ("IMAGE", "MASK")
+    RETURN_NAMES = ("image", "mask")
     FUNCTION = "image_concat"
     CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
 
@@ -1210,7 +1215,8 @@ class ImageConcat:
                 y_offset += img.height
 
         result_img = pil2tensor(new_image)
-        return (result_img,)
+        mask = np2tensor(np.array(new_image)[:, :, 0])
+        return result_img, mask
 
 
 NODE_CLASS_MAPPINGS = {
