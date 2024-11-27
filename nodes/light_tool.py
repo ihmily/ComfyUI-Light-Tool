@@ -11,7 +11,6 @@ import hashlib
 import time
 import uuid
 
-import httpx
 from PIL import ImageSequence, ImageOps
 from typing import Any, Tuple
 from torchvision.transforms import functional
@@ -19,8 +18,17 @@ import folder_paths
 import node_helpers
 from oss_tool import oss_upload
 
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from light_tool_utils import *
+
+
+class AnyType(str):
+    def __ne__(self, __value: object) -> bool:
+        return False
+
+
+any_type = AnyType("*")
 
 
 class LoadImage:
@@ -76,7 +84,7 @@ class LoadImage:
                 continue
 
             image = np.array(image).astype(np.float32) / 255.0
-            image = torch.from_numpy(image)[None,]
+            image = torch.from_numpy(image)[None, ]
             if 'A' in i.getbands():
                 mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
                 mask = 1. - torch.from_numpy(mask)
@@ -206,7 +214,7 @@ class LoadImagesFromDir:
                     image = i.convert("RGB")
 
                 image = np.array(image).astype(np.float32) / 255.0
-                image = torch.from_numpy(image)[None,]
+                image = torch.from_numpy(image)[None, ]
 
                 if 'A' in i.getbands():
                     mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
@@ -620,7 +628,7 @@ class IsTransparent:
 
     RETURN_TYPES = ("BOOLEAN",)
     FUNCTION = "is_transparent"
-    CATEGORY = 'ComfyUI-Light-Tool/image'
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
 
     @staticmethod
     def is_transparent(image: torch.Tensor, threshold: float):
@@ -720,7 +728,7 @@ class MaskContourExtractor:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "contour_extractor"
-    CATEGORY = 'ComfyUI-Light-Tool/image'
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
 
     @staticmethod
     def contour_extractor(image, color_hex, use_hex, R, G, B):
@@ -847,7 +855,7 @@ class RGB2RGBA:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "rgb2rgba"
-    CATEGORY = 'ComfyUI-Light-Tool/image'
+    CATEGORY = 'ComfyUI-Light-Tool/image/transform'
 
     @staticmethod
     def rgb2rgba(image):
@@ -875,7 +883,7 @@ class RGBA2RGB:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "rgba2rgb"
-    CATEGORY = 'ComfyUI-Light-Tool/image'
+    CATEGORY = 'ComfyUI-Light-Tool/image/transform'
 
     @staticmethod
     def rgba2rgb(image):
@@ -917,7 +925,7 @@ class ShowText:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": ("STRING", {"defaultInput": True, "multiline": True}),
+                "text": (any_type, {"defaultInput": True, "multiline": True}),
             }
         }
 
@@ -1110,12 +1118,108 @@ class SaveToAliyunOSS:
         return (file_url,)
 
 
+class GetImageSize:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE", ),
+                "output_size": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+            },
+        }
+
+    RETURN_TYPES = ("INT", "INT", "INT")
+    RETURN_NAMES = ("width", "height", "size")
+    FUNCTION = "image_size"
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
+
+    @staticmethod
+    def image_size(image, output_size):
+        image = tensor2pil(image)
+        file_size = 0
+        if output_size:
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=True) as tmp:
+                temp_file_path = tmp.name + '.png'
+                image.save(temp_file_path)
+                file_size = os.path.getsize(temp_file_path)
+                print(f"The size of the image file is: {file_size} bytes")
+        return image.width, image.height, file_size
+
+
+class ImageConcat:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image1": ("IMAGE",),
+                "image2": ("IMAGE",),
+                "direction": (["horizontal", "vertical"], {"default": "horizontal"})
+            },
+            "optional": {
+                "image3": ("IMAGE",),
+                "image4": ("IMAGE",),
+                "image5": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "image_concat"
+    CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+
+    @staticmethod
+    def image_concat(direction, **kwargs):
+        images = [tensor2pil(x) for x in kwargs.values()]
+
+        if direction == 'horizontal':
+            height = images[0].height
+            for img in images:
+                if img.height != height:
+                    raise ValueError(
+                        f"(Light-Tool/ImageConcat) All images must have the same height. {img.height} and {height}"
+                    )
+            total_width = sum(img.width for img in images)
+            new_image = Image.new('RGB', (total_width, height))
+        elif direction == 'vertical':
+            width = images[0].width
+            for img in images:
+                if img.width != width:
+                    raise ValueError(
+                        f"(Light-Tool/ImageConcat) All images must have the same width. {img.width} and {width}"
+                    )
+            total_height = sum(img.height for img in images)
+            new_image = Image.new('RGB', (width, total_height))
+        else:
+            raise ValueError("(Light-Tool/ImageConcat) Direction must be 'horizontal' or 'vertical'.")
+
+        x_offset = 0
+        y_offset = 0
+        for img in images:
+            if direction == 'horizontal':
+                new_image.paste(img, (x_offset, 0))
+                x_offset += img.width
+            elif direction == 'vertical':
+                new_image.paste(img, (0, y_offset))
+                y_offset += img.height
+
+        result_img = pil2tensor(new_image)
+        return (result_img,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
     "Light-Tool: ShowText": ShowText,
     "Light-Tool: LoadImage": LoadImage,
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
     "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
+    "Light-Tool: GetImageSize": GetImageSize,
     "Light-Tool: MaskToImage": MaskToImage,
     "Light-Tool: ImageToMask": ImageToMask,
     "Light-Tool: InvertMask": InvertMask,
@@ -1133,6 +1237,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: PhantomTankEffect": PhantomTankEffect,
     "Light-Tool: MaskContourExtractor": MaskContourExtractor,
     "Light-Tool: SolidColorBackground": AdvancedSolidColorBackground,
+    "Light-Tool: ImageConcat": ImageConcat,
     "Light-Tool: PreviewVideo": PreviewVideo,
     "Light-Tool: SaveVideo": SaveVideo,
     "Light-Tool: SaveToAliyunOSS": SaveToAliyunOSS
@@ -1144,6 +1249,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: LoadImage": "Light-Tool: Load Image",
     "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
     "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",
+    "Light-Tool: GetImageSize": "Light-Tool: Get Image Size",
     "Light-Tool: MaskToImage": "Light-Tool: Mask to Image",
     "Light-Tool: ImageToMask": "Light-Tool: Image to Mask",
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
@@ -1160,6 +1266,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: MaskImageToTransparent": "Light-Tool: Mask Background to Transparent",
     "Light-Tool: PhantomTankEffect": "Light-Tool: Generate PhantomTankEffect",
     "Light-Tool: SolidColorBackground": "Light-Tool: SolidColorBackground",
+    "Light-Tool: ImageConcat": "Light-Tool: Image Concat",
     "Light-Tool: PreviewVideo": "Light-Tool: Preview Video",
     "Light-Tool: SaveVideo": "Light-Tool: Save Video",
     "Light-Tool: SaveToAliyunOSS": "Light-Tool: Save File To Aliyun OSS"
