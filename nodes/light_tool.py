@@ -52,6 +52,7 @@ class LoadImage:
     RETURN_NAMES = ("image", "mask")
     FUNCTION = "load_image"
     CATEGORY = 'ComfyUI-Light-Tool/image/LoadImage'
+    DESCRIPTION = "Load image"
 
     @staticmethod
     def load_image(image, keep_alpha_channel):
@@ -133,6 +134,7 @@ class LoadImageFromURL:
     RETURN_NAMES = ("image",)
     FUNCTION = "load_image_from_url"
     CATEGORY = "ComfyUI-Light-Tool/image/LoadImage"
+    DESCRIPTION = "Load image From URL"
 
     @staticmethod
     def load_image_from_url(url, keep_alpha_channel):
@@ -177,6 +179,7 @@ class LoadImagesFromDir:
     OUTPUT_IS_LIST = (True, True, True)
     FUNCTION = "load_images"
     CATEGORY = 'ComfyUI-Light-Tool/image/LoadImage'
+    DESCRIPTION = "Load image From image directory"
 
     @classmethod
     def IS_CHANGED(cls, **kwargs):
@@ -248,6 +251,7 @@ class ImageMaskApply:
     RETURN_NAMES = ("image",)
     FUNCTION = "run"
     CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+    DESCRIPTION = "Extract the transparent image using a mask to separate the subject from the background"
 
     @staticmethod
     def run(image, mask):
@@ -283,6 +287,7 @@ class MaskToImage:
     RETURN_NAMES = ("image",)
     FUNCTION = "mask_to_image"
     CATEGORY = 'ComfyUI-Light-Tool/image/mask'
+    DESCRIPTION = "Convert mask to image"
 
     @staticmethod
     def mask_to_image(mask):
@@ -311,6 +316,7 @@ class ImageToMask:
     RETURN_NAMES = ("mask",)
     FUNCTION = "image_to_mask"
     CATEGORY = 'ComfyUI-Light-Tool/image/mask'
+    DESCRIPTION = "Convert image to mask"
 
     @staticmethod
     def image_to_mask(image, channel):
@@ -343,6 +349,7 @@ class MaskImageToTransparent:
     RETURN_NAMES = ("image",)
     FUNCTION = "mask2Transparent"
     CATEGORY = 'ComfyUI-Light-Tool/image/mask'
+    DESCRIPTION = "Convert the non-masked areas of an image to transparency"
 
     @staticmethod
     def mask2Transparent(image):
@@ -373,6 +380,7 @@ class BoundingBoxCropping:
     RETURN_NAMES = ("image",)
     FUNCTION = "image_crop"
     CATEGORY = 'ComfyUI-Light-Tool/image/ImageCrop'
+    DESCRIPTION = "Cut out an image based on the smallest bounding rectangle of the transparent object within it"
 
     @staticmethod
     def image_crop(image):
@@ -407,6 +415,7 @@ class MaskBoundingBoxCropping:
     RETURN_NAMES = ("image",)
     FUNCTION = "mask_image_crop"
     CATEGORY = 'ComfyUI-Light-Tool/image/ImageCrop'
+    DESCRIPTION = "Cut out an mask image based on the smallest bounding rectangle of the transparent object within it"
 
     @staticmethod
     def mask_image_crop(image):
@@ -451,6 +460,7 @@ class InvertMask:
     RETURN_NAMES = ("image",)
     FUNCTION = "invert_mask"
     CATEGORY = 'ComfyUI-Light-Tool/image/mask'
+    DESCRIPTION = "Invert the colors between the masked and unmasked regions of an image"
 
     @staticmethod
     def invert_mask(image):
@@ -491,6 +501,7 @@ class AddBackground:
     RETURN_NAMES = ("image",)
     FUNCTION = "add_background"
     CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+    DESCRIPTION = "Add solid color background to transparent image"
 
     @staticmethod
     def add_background(image, color_hex, use_hex, R, G, B):
@@ -536,6 +547,7 @@ class ImageOverlay:
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "combine_images"
     CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+    DESCRIPTION = "Overlay one image on top of another to create a composite image"
 
     @staticmethod
     def combine_images(origin_image: torch.Tensor, overlay_image: torch.Tensor, overlay_mask: torch.Tensor):
@@ -582,6 +594,7 @@ class AddBackgroundV2:
     RETURN_NAMES = ("image",)
     FUNCTION = "add_background_v2"
     CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+    DESCRIPTION = "Add solid color background to transparent image"
 
     @staticmethod
     def add_background_v2(image, color_hex, use_hex, R, G, B, square, left_margin, right_margin, top_margin,
@@ -634,6 +647,7 @@ class IsTransparent:
     RETURN_TYPES = ("BOOLEAN",)
     FUNCTION = "is_transparent"
     CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
+    DESCRIPTION = "Detect if an image is transparent"
 
     @staticmethod
     def is_transparent(image: torch.Tensor, threshold: float):
@@ -677,6 +691,7 @@ class PhantomTankEffect:
     RETURN_NAMES = ("image",)
     FUNCTION = "process_images"
     CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+    DESCRIPTION = "Creates a 'Phantom Tank' effect image"
 
     @staticmethod
     def process_images(image1: torch.Tensor, image2: torch.Tensor, offset: int, alpha_min: int, alpha_max: int,
@@ -734,6 +749,7 @@ class MaskContourExtractor:
     RETURN_NAMES = ("image",)
     FUNCTION = "contour_extractor"
     CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
+    DESCRIPTION = "Extract contour points of the mask in the image"
 
     @staticmethod
     def contour_extractor(image, color_hex, use_hex, R, G, B):
@@ -784,6 +800,7 @@ class AdvancedSolidColorBackground:
     RETURN_NAMES = ("image",)
     FUNCTION = "generate_bg"
     CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+    DESCRIPTION = "Generate solid color background"
 
     @staticmethod
     def generate_bg(color_hex, use_hex, width, height, R, G, B, mode, alpha):
@@ -822,6 +839,7 @@ class ResizeImage:
     RETURN_NAMES = ("image",)
     FUNCTION = "resize_img"
     CATEGORY = 'ComfyUI-Light-Tool/image/ImageCrop'
+    DESCRIPTION = "Crop an image based on its width and height"
 
     @staticmethod
     def resize_img(image, width, height, resize_method, mode):
@@ -861,6 +879,7 @@ class RGB2RGBA:
     RETURN_NAMES = ("image",)
     FUNCTION = "rgb2rgba"
     CATEGORY = 'ComfyUI-Light-Tool/image/transform'
+    DESCRIPTION = "Convert an RGB image to RGBA format"
 
     @staticmethod
     def rgb2rgba(image):
@@ -889,6 +908,7 @@ class RGBA2RGB:
     RETURN_NAMES = ("image",)
     FUNCTION = "rgba2rgb"
     CATEGORY = 'ComfyUI-Light-Tool/image/transform'
+    DESCRIPTION = "Convert an RGBA image to RGB format"
 
     @staticmethod
     def rgba2rgb(image):
@@ -918,6 +938,7 @@ class InputText:
     RETURN_NAMES = ("text",)
     FUNCTION = "input_text"
     CATEGORY = 'ComfyUI-Light-Tool/Text'
+    DESCRIPTION = "Input string text "
 
     @staticmethod
     def input_text(input_text):
@@ -941,6 +962,7 @@ class ShowText:
     FUNCTION = "show_text"
     CATEGORY = 'ComfyUI-Light-Tool/Text'
     OUTPUT_IS_LIST = (True,)
+    DESCRIPTION = "Show output Text"
 
     @staticmethod
     def show_text(text):
@@ -964,6 +986,7 @@ class PreviewVideo:
     RETURN_NAMES = ("video",)
     FUNCTION = "preview_video"
     CATEGORY = 'ComfyUI-Light-Tool/Video'
+    DESCRIPTION = "Preview video from video url"
 
     @staticmethod
     def preview_video(video_url):
@@ -989,6 +1012,7 @@ class SaveVideo:
     RETURN_NAMES = ("video",)
     FUNCTION = "save_video"
     CATEGORY = 'ComfyUI-Light-Tool/Video'
+    DESCRIPTION = "Saves the video by video url to your directory"
 
     def save_video(self, video_url, server, save_dir):
         filename = str(uuid.uuid4())
@@ -1029,6 +1053,7 @@ class SaveVideoToAliyunOss:
     RETURN_NAMES = ("video_url",)
     FUNCTION = "save_video"
     CATEGORY = 'ComfyUI-Light-Tool/Video'
+    DESCRIPTION = "Saves the video to aliyun OSS"
 
     def save_video(self, file, save_name, endpoint, bucket, oss_access_key_id, oss_access_key_secret,
                    oss_session_token, use_cname, visit_endpoint, sign, timeout):
@@ -1090,6 +1115,7 @@ class SaveToAliyunOSS:
     RETURN_NAMES = ("file_url",)
     FUNCTION = "save"
     CATEGORY = 'ComfyUI-Light-Tool/OSS'
+    DESCRIPTION = "Saves the file to aliyun OSS"
 
     def save(self, file, save_name, endpoint, bucket, oss_access_key_id, oss_access_key_secret,
              oss_session_token, use_cname, visit_endpoint, sign, timeout):
@@ -1140,6 +1166,7 @@ class GetImageSize:
     RETURN_NAMES = ("width", "height", "size")
     FUNCTION = "image_size"
     CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
+    DESCRIPTION = "Get image base info"
 
     @staticmethod
     def image_size(image, output_size):
@@ -1178,6 +1205,7 @@ class ImageConcat:
     RETURN_NAMES = ("image", "mask")
     FUNCTION = "image_concat"
     CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+    DESCRIPTION = "Concatenates the N input images into a 1xN or Nx1 grid"
 
     @staticmethod
     def image_concat(direction, **kwargs):
