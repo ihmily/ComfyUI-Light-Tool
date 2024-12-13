@@ -966,7 +966,8 @@ class ShowText:
 
     @staticmethod
     def show_text(text):
-        return {"ui": {"text": text}, "result": (text,)}
+        output = text[0] if isinstance(text[0], list) else text
+        return {"ui": {"text": output}, "result": (output,)}
 
 
 class PreviewVideo:
@@ -1247,9 +1248,74 @@ class ImageConcat:
         return result_img, mask
 
 
+class TextConnect:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+            },
+            "optional": {
+                "string_list": (any_type, {"default": ""}),
+                "string_1": ("STRING", ),
+                "string_2": ("STRING", ),
+                "string_3": ("STRING", ),
+                "string_4": ("STRING", ),
+                "delimiter": ("STRING", {"default": ""}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text",)
+    FUNCTION = "text_connect"
+    CATEGORY = 'ComfyUI-Light-Tool/Text'
+    DESCRIPTION = "Connect multiple text strings"
+
+    @staticmethod
+    def text_connect(delimiter, **kwargs):
+        string_list1 = kwargs.get('string_list')
+        string_list2 = [x for x in kwargs.values() if x and not isinstance(x, list)]
+        all_string_list = string_list1 + string_list2 if string_list1 else string_list2
+        return (delimiter.join(all_string_list),)
+
+
+class InputTextList:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+            },
+            "optional": {
+                "string_1": ("STRING", ),
+                "string_2": ("STRING", ),
+                "string_3": ("STRING", ),
+                "string_4": ("STRING", ),
+            }
+        }
+
+    OUTPUT_IS_LIST = (True, )
+    OUTPUT_NODE = True
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("strings",)
+    FUNCTION = "input_text_list"
+    CATEGORY = 'ComfyUI-Light-Tool/Text'
+    DESCRIPTION = "Connect multiple text strings"
+
+    @staticmethod
+    def input_text_list(**kwargs):
+        return ([[x for x in kwargs.values() if x]],)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
+    "Light-Tool: InputTextList": InputTextList,
     "Light-Tool: ShowText": ShowText,
+    "Light-Tool: TextConnect": TextConnect,
     "Light-Tool: LoadImage": LoadImage,
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
     "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
@@ -1280,6 +1346,8 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: InputText": "Light-Tool: Input Text",
     "Light-Tool: ShowText": "Light-Tool: Show Text",
+    "Light-Tool: InputTextList": "Light-Tool: Input Text List",
+    "Light-Tool: TextConnect": "Light-Tool: Connect Text Strings",
     "Light-Tool: LoadImage": "Light-Tool: Load Image",
     "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
     "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",

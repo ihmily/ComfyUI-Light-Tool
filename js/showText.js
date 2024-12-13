@@ -10,10 +10,10 @@ app.registerExtension({
 			function populate(text) {
 				if (this.widgets) {
                     // Clear existing widgets except the first one
-					for (let i = 1; i < this.widgets.length; i++) {
+					for (let i = 0; i < this.widgets.length; i++) {
 						this.widgets[i].onRemove?.();
 					}
-					this.widgets.length = 1;
+					this.widgets.length = 0;
 				}
 
 				const v = [...text];
