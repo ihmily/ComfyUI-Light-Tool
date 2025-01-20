@@ -557,6 +557,10 @@ class ImageOverlay:
             bg = tensor2pil(img).convert('RGB')
             alpha = tensor2pil(overlay_mask).convert('L')
 
+            if image.size != bg.size:
+                raise ValueError(f"ImageOverlay(Light-Tool): Images must have the same size. "
+                                 f"{image.size}and{bg.size} is not match")
+
             image = functional.to_tensor(image)
             bg = functional.to_tensor(bg)
             bg = functional.resize(bg, image.shape[-2:])
@@ -566,6 +570,46 @@ class ImageOverlay:
             image_list.append(pil2tensor(np2pil(new_image)))
         images = torch.cat(image_list, dim=0)
         return (images,)
+
+
+class SimpleImageOverlay:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "foreground": ("IMAGE",),
+                "background": ("IMAGE",),
+                "center": ("BOOLEAN", {"default": True}),
+                "left": ("INT", {"default": 0, "min": 0, "step": 1, "display": "number"}),
+                "top": ("INT", {"default": 0, "min": 0, "step": 1, "display": "number"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "combine_images"
+    CATEGORY = 'ComfyUI-Light-Tool/image/compositing'
+    DESCRIPTION = "Overlay one image on top of another to create a composite image"
+
+    @staticmethod
+    def combine_images(foreground: torch.Tensor, background: torch.Tensor, center, left, top):
+
+        foreground_pil = tensor2pil(foreground)
+        if foreground_pil.mode != "RGBA":
+            foreground_pil = foreground_pil.convert("RGBA")
+        background_pil = tensor2pil(background)
+
+        if center:
+            bg_width, bg_height = background_pil.size
+            fg_width, fg_height = foreground_pil.size
+            left = (bg_width - fg_width) // 2
+            top = (bg_height - fg_height) // 2
+
+        background_pil.paste(foreground_pil, (left, top), foreground_pil)
+        result = pil2tensor(background_pil)
+        return (result, )
 
 
 class AddBackgroundV2:
@@ -1326,6 +1370,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: RGB2RGBA": RGB2RGBA,
     "Light-Tool: RGBA2RGB": RGBA2RGB,
     "Light-Tool: ImageMaskApply": ImageMaskApply,
+    "Light-Tool: SimpleImageOverlay": SimpleImageOverlay,
     "Light-Tool: ImageOverlay": ImageOverlay,
     "Light-Tool: BoundingBoxCropping": BoundingBoxCropping,
     "Light-Tool: AddBackground": AddBackground,
@@ -1358,6 +1403,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: RGB2RGBA": "Light-Tool: RGB To RGBA",
     "Light-Tool: RGBA2RGB": "Light-Tool: RGBa To RGB",
     "Light-Tool: ImageMaskApply": "Light-Tool: Extract Transparent Image",
+    "Light-Tool: SimpleImageOverlay": "Light-Tool: Simple Image Overlay",
     "Light-Tool: ImageOverlay": "Light-Tool: Image Overlay",
     "Light-Tool: BoundingBoxCropping": "Light-Tool: Bounding Box Cropping",
     "Light-Tool: AddBackground": "Light-Tool: Add solid color background",
