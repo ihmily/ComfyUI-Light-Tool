@@ -1325,6 +1325,40 @@ class TextConnect:
         return (delimiter.join(all_string_list),)
 
 
+class SimpleTextConnect:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "string1": (any_type, {"default": ""}),
+                "string2": ("STRING", {"default": ""}),
+                "delimiter": ("STRING", {"default": ""}),
+            },
+            "optional": {
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("text",)
+    FUNCTION = "text_connect"
+    CATEGORY = 'ComfyUI-Light-Tool/Text'
+    DESCRIPTION = "Connect multiple text strings"
+
+    @staticmethod
+    def text_connect(string1, string2, delimiter):
+        if type(string1) == list:
+            connect_result = []
+            for str1 in string1:
+                result = str1 + delimiter + string2
+                connect_result.append(result)
+        else:
+            connect_result = string1 + delimiter +string2
+        return (connect_result,)
+
+
 class InputTextList:
     def __init__(self):
         pass
@@ -1360,6 +1394,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputTextList": InputTextList,
     "Light-Tool: ShowText": ShowText,
     "Light-Tool: TextConnect": TextConnect,
+    "Light-Tool: SimpleTextConnect": SimpleTextConnect,
     "Light-Tool: LoadImage": LoadImage,
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
     "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
@@ -1393,6 +1428,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: ShowText": "Light-Tool: Show Text",
     "Light-Tool: InputTextList": "Light-Tool: Input Text List",
     "Light-Tool: TextConnect": "Light-Tool: Connect Text Strings",
+    "Light-Tool: SimpleTextConnect": "Light-Tool: Simple Connect Text Strings",
     "Light-Tool: LoadImage": "Light-Tool: Load Image",
     "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
     "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",
