@@ -9,7 +9,7 @@ import cv2
 import httpx
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, ImageChops
 
 
 def tensor2pil(t_image: torch.Tensor) -> Image:
@@ -50,6 +50,10 @@ def hex_to_rgb(hex_color):
 def hex_to_bgr(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i + 2], 16) for i in (4, 2, 0))
+
+
+def invert_mask(mask: Image) -> Image:
+    return ImageChops.invert(mask.convert('L'))
 
 
 def to_gray(image, method="luminosity"):
