@@ -31,7 +31,7 @@ def np2tensor(img_np: Union[np.ndarray, List[np.ndarray]]) -> torch.Tensor:
     return torch.from_numpy(img_np.astype(np.float32) / 255.0).unsqueeze(0)
 
 
-def tensor2np(tensor: torch.Tensor) -> List[np.ndarray]:
+def tensor2np(tensor: torch.Tensor) -> np.ndarray | List[np.ndarray]:
     if len(tensor.shape) == 3:
         return np.clip(255.0 * tensor.cpu().numpy(), 0, 255).astype(np.uint8)
     else:
@@ -95,3 +95,15 @@ def download_file(url, file_name):
                 file.write(chunk)
     print(f"File downloaded as {file_name}")
     return file_name
+
+
+def dilate_image(img: np.ndarray, kernel_size: tuple = (3, 3), iterations: int = 1) -> np.ndarray:
+    kernel = np.ones(kernel_size, np.uint8)
+    dilated_img = cv2.dilate(img, kernel, iterations=iterations)
+    return dilated_img
+
+
+def erode_image(img: np.ndarray, kernel_size: tuple = (3, 3), iterations: int = 1) -> np.ndarray:
+    kernel = np.ones(kernel_size, np.uint8)
+    eroded_img = cv2.erode(img, kernel, iterations=iterations)
+    return eroded_img

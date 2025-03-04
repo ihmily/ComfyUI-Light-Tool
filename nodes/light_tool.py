@@ -241,7 +241,8 @@ class ImageMaskApply:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "mask": ("IMAGE",)
+                "mask": ("IMAGE",),
+                "invert": ("BOOLEAN", {"default": False}),
             },
             "optional": {
             }
@@ -254,7 +255,7 @@ class ImageMaskApply:
     DESCRIPTION = "Extract the transparent image using a mask to separate the subject from the background"
 
     @staticmethod
-    def run(image, mask):
+    def run(image, mask, invert):
         image_list = []
         for _image, _mask in zip(image, mask):
             image_pil = tensor2pil(_image).convert('RGB')
@@ -264,7 +265,11 @@ class ImageMaskApply:
             if mask_pil.size != image_pil.size:
                 raise ValueError(f"ImageMaskApply(Light-Tool): Images must have the same size. "
                                  f"{image_size}and{mask_size} is not match")
-            image_pil = rgb2rgba(image_pil, mask_pil)
+            if invert:
+                inverted_mask = invert_mask(mask_pil)
+                image_pil = rgb2rgba(image_pil, inverted_mask)
+            else:
+                image_pil = rgb2rgba(image_pil, mask_pil)
             image = pil2tensor(image_pil)
             image_list.append(image)
         image = torch.cat(image_list, dim=0)
@@ -1389,6 +1394,41 @@ class InputTextList:
         return ([[x for x in kwargs.values() if x]],)
 
 
+class MorphologicalTF:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "option": (["dilate", "erode"], {"default": "dilate"}),
+                "kernel_x": ("INT", {"default": 3, "min": 0, "display": "number"}),
+                "kernel_y": ("INT", {"default": 3, "min": 0, "display": "number"}),
+                "iterations": ("INT", {"default": 1, "min": 0, "display": "number"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "morphology_process"
+    CATEGORY = 'ComfyUI-Light-Tool/image/transform'
+    DESCRIPTION = "Perform morphological transformations on images"
+
+    @staticmethod
+    def morphology_process(image, option, kernel_x, kernel_y, iterations):
+
+        image_pil = tensor2pil(image).convert('L')
+        image = np.array(image_pil).astype(np.uint8)
+        if option == "dilate":
+            result_image = dilate_image(image, (kernel_x, kernel_y), iterations)
+        else:
+            result_image = erode_image(image, (kernel_x, kernel_y), iterations)
+        result_img = np2tensor(result_image)
+        return (result_img,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
     "Light-Tool: InputTextList": InputTextList,
@@ -1404,6 +1444,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: InvertMask": InvertMask,
     "Light-Tool: RGB2RGBA": RGB2RGBA,
     "Light-Tool: RGBA2RGB": RGBA2RGB,
+    "Light-Tool: MorphologicalTF": MorphologicalTF,
     "Light-Tool: ImageMaskApply": ImageMaskApply,
     "Light-Tool: SimpleImageOverlay": SimpleImageOverlay,
     "Light-Tool: ImageOverlay": ImageOverlay,
@@ -1438,6 +1479,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
     "Light-Tool: RGB2RGBA": "Light-Tool: RGB To RGBA",
     "Light-Tool: RGBA2RGB": "Light-Tool: RGBa To RGB",
+    "Light-Tool: MorphologicalTF": "Light-Tool: Morphological Transform",
     "Light-Tool: ImageMaskApply": "Light-Tool: Extract Transparent Image",
     "Light-Tool: SimpleImageOverlay": "Light-Tool: Simple Image Overlay",
     "Light-Tool: ImageOverlay": "Light-Tool: Image Overlay",
