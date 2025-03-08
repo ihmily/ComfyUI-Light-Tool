@@ -104,7 +104,7 @@ class LoadImage:
         return output_image, output_mask
 
     @classmethod
-    def IS_CHANGED(cls, image):
+    def IS_CHANGED(cls, image, keep_alpha_channel):
         image_path = folder_paths.get_annotated_filepath(image)
         m = hashlib.sha256()
         with open(image_path, 'rb') as f:
@@ -112,7 +112,7 @@ class LoadImage:
         return m.digest().hex()
 
     @classmethod
-    def VALIDATE_INPUTS(cls, image):
+    def VALIDATE_INPUTS(cls, image, keep_alpha_channel):
         if not folder_paths.exists_annotated_filepath(image):
             return "LoadImage(Light-Tool): Invalid image file: {}".format(image)
 
