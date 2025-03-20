@@ -18,6 +18,8 @@ from torchvision.transforms import functional
 import folder_paths
 import node_helpers
 from oss_tool import oss_upload
+from upscale import UpscaleMode, upscale_image
+from scale import ScaleMode, scale_image
 
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -104,7 +106,7 @@ class LoadImage:
         return output_image, output_mask
 
     @classmethod
-    def IS_CHANGED(cls, image):
+    def IS_CHANGED(cls, image, keep_alpha_channel):
         image_path = folder_paths.get_annotated_filepath(image)
         m = hashlib.sha256()
         with open(image_path, 'rb') as f:
@@ -112,7 +114,7 @@ class LoadImage:
         return m.digest().hex()
 
     @classmethod
-    def VALIDATE_INPUTS(cls, image):
+    def VALIDATE_INPUTS(cls, image, keep_alpha_channel):
         if not folder_paths.exists_annotated_filepath(image):
             return "LoadImage(Light-Tool): Invalid image file: {}".format(image)
 
@@ -1360,7 +1362,7 @@ class SimpleTextConnect:
                 result = str1 + delimiter + string2
                 connect_result.append(result)
         else:
-            connect_result = string1 + delimiter +string2
+            connect_result = string1 + delimiter + string2
         return (connect_result,)
 
 
@@ -1429,6 +1431,160 @@ class MorphologicalTF:
         return (result_img,)
 
 
+class Hex2Rgb:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "color_hex": ("STRING", {"default": "#FFFFFF", "multiline": False}),
+            },
+        }
+
+    RETURN_TYPES = ("INT", "INT", "INT")
+    RETURN_NAMES = ("R", "G", "B")
+    FUNCTION = "hex2rgb"
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
+    DESCRIPTION = "Hex color code convert to RGB code"
+
+    @staticmethod
+    def hex2rgb(color_hex):
+        if "#000000" == color_hex:
+            return 0, 0, 0
+        elif "#ffffff".lower() == color_hex:
+            return 255, 255, 255
+        else:
+            return hex_to_rgb(color_hex)
+
+
+class ScaleImage:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "width": ("INT", {"default": 1024, "min": 0, "display": "number"}),
+                "height": ("INT", {"default": 1024, "min": 0, "display": "number"}),
+                "mode": (["AUTO", "STRETCH", "FILL", "PAD"], {"default": "AUTO"}),
+                "R": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "G": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "B": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "A": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "align": (["center", "top-left", "top-right", "bottom-left", "bottom-right"], {"default": "center"}),
+                "resample": (["LANCZOS", "NEAREST", "BILINEAR", "BICUBIC", "BOX", "HAMMING"], {"default": "LANCZOS"}),
+                "aspect_tolerance": ("FLOAT", {"default": 0.01, "min": 0, "display": "number"})
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "scale_image"
+    CATEGORY = 'ComfyUI-Light-Tool/image/transform'
+    DESCRIPTION = ""
+
+    @staticmethod
+    def scale_image(
+            image, width, height, mode, R, G, B, A, align, resample, aspect_tolerance):
+
+        image_pil = tensor2pil(image)
+        sale_mode_dict = {
+            "AUTO": ScaleMode.AUTO,
+            "STRETCH": ScaleMode.STRETCH,
+            "FILL": ScaleMode.FILL,
+            "PAD": ScaleMode.PAD
+        }
+
+        resample_dict = {
+            "LANCZOS": Image.Resampling.LANCZOS,
+            "NEAREST": Image.Resampling.NEAREST,
+            "BILINEAR": Image.Resampling.BILINEAR,
+            "BICUBIC": Image.Resampling.BICUBIC,
+            "BOX": Image.Resampling.BOX,
+            "HAMMING": Image.Resampling.HAMMING
+        }
+
+        scale_img = scale_image(
+            image_pil,
+            (width, height),
+            background=(R, G, B, A),
+            mode=sale_mode_dict[mode],
+            align=align,
+            resample=resample_dict[resample],
+            aspect_tolerance=aspect_tolerance
+        )
+        result_img = pil2tensor(scale_img)
+        return (result_img,)
+
+
+class UpscaleImage:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "width": ("INT", {"default": 1024, "min": 0, "display": "number"}),
+                "height": ("INT", {"default": 1024, "min": 0, "display": "number"}),
+                "mode": (["AUTO", "STRETCH", "FILL", "PAD"], {"default": "AUTO"}),
+                "R": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "G": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "B": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "A": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "align": (["center", "top-left", "top-right", "bottom-left", "bottom-right"], {"default": "center"}),
+                "resample": (["LANCZOS", "NEAREST", "BILINEAR", "BICUBIC", "BOX", "HAMMING"], {"default": "LANCZOS"}),
+                "aspect_tolerance": ("FLOAT", {"default": 0.01, "min": 0, "display": "number"}),
+                "sharpen": ("BOOLEAN", {"default": True}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "upscale_image"
+    CATEGORY = 'ComfyUI-Light-Tool/image/transform'
+    DESCRIPTION = ""
+
+    @staticmethod
+    def upscale_image(
+            image, width, height, mode, R, G, B, A, align, resample, aspect_tolerance, sharpen):
+
+        image_pil = tensor2pil(image)
+        upsale_mode_dict = {
+            "AUTO": UpscaleMode.AUTO,
+            "STRETCH": UpscaleMode.STRETCH,
+            "FILL": UpscaleMode.FILL,
+            "PAD": UpscaleMode.PAD
+        }
+
+        resample_dict = {
+            "LANCZOS": Image.Resampling.LANCZOS,
+            "NEAREST": Image.Resampling.NEAREST,
+            "BILINEAR": Image.Resampling.BILINEAR,
+            "BICUBIC": Image.Resampling.BICUBIC,
+            "BOX": Image.Resampling.BOX,
+            "HAMMING": Image.Resampling.HAMMING
+        }
+
+        upscale_img = upscale_image(
+            image_pil,
+            (width, height),
+            background=(R, G, B, A),
+            mode=upsale_mode_dict[mode],
+            align=align,
+            resample=resample_dict[resample],
+            aspect_tolerance=aspect_tolerance,
+            sharpen=sharpen
+        )
+        result_img = pil2tensor(upscale_img)
+        return (result_img,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
     "Light-Tool: InputTextList": InputTextList,
@@ -1439,6 +1595,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
     "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
     "Light-Tool: GetImageSize": GetImageSize,
+    "Light-Tool: Hex2Rgb": Hex2Rgb,
     "Light-Tool: MaskToImage": MaskToImage,
     "Light-Tool: ImageToMask": ImageToMask,
     "Light-Tool: InvertMask": InvertMask,
@@ -1452,6 +1609,8 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: AddBackground": AddBackground,
     "Light-Tool: AddBackgroundV2": AddBackgroundV2,
     "Light-Tool: ResizeImage": ResizeImage,
+    "Light-Tool: UpscaleImage": UpscaleImage,
+    "Light-Tool: ScaleImage": ScaleImage,
     "Light-Tool: IsTransparent": IsTransparent,
     "Light-Tool: MaskBoundingBoxCropping": MaskBoundingBoxCropping,
     "Light-Tool: MaskImageToTransparent": MaskImageToTransparent,
@@ -1474,6 +1633,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
     "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",
     "Light-Tool: GetImageSize": "Light-Tool: Get Image Size",
+    "Light-Tool: Hex2Rgb": "Light-Tool: Hex to Rgb",
     "Light-Tool: MaskToImage": "Light-Tool: Mask to Image",
     "Light-Tool: ImageToMask": "Light-Tool: Image to Mask",
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
@@ -1487,6 +1647,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: AddBackground": "Light-Tool: Add solid color background",
     "Light-Tool: AddBackgroundV2": "Light-Tool: Add solid color background V2",
     "Light-Tool: ResizeImage": "Light-Tool: Resize Image",
+    "Light-Tool: UpscaleImage": "Light-Tool: Upscale Image",
+    "Light-Tool: ScaleImage": "Light-Tool: Scale Image",
     "Light-Tool: IsTransparent": "Light-Tool: Is Transparent",
     "Light-Tool: MaskBoundingBoxCropping": "Light-Tool: Mask Bounding Box Cropping",
     "Light-Tool: MaskImageToTransparent": "Light-Tool: Mask Background to Transparent",
