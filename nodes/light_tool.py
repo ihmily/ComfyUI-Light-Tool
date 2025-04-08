@@ -1045,6 +1045,38 @@ class PreviewVideo:
         return {"ui": {"video_url": [video_url]}}
 
 
+class LoadVideo:
+    def __init__(self):
+        self.output_dir = folder_paths.get_output_directory()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "video_url": ("STRING", {"defaultInput": True}),
+                "server": ("STRING", {"defaultInput": False, "default": '', "placeholder": "local server address"}),
+                "save_dir": ("STRING", {"defaultInput": False, "default": ''}),
+            }
+        }
+
+    OUTPUT_NODE = True
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("video_path", "video_url")
+    FUNCTION = "load_video"
+    CATEGORY = 'ComfyUI-Light-Tool/Video'
+    DESCRIPTION = "Load the video from video url and save to your directory"
+
+    def load_video(self, video_url, server, save_dir):
+        filename = str(uuid.uuid4())
+        save_file_path = os.path.join(self.output_dir, save_dir)
+        os.makedirs(save_file_path, exist_ok=True)
+        download_file(video_url, os.path.join(save_file_path, filename + ".mp4"))
+        t13 = int(time.time() * 1000)
+        server_url = server.split('?')[0].strip().rstrip('/')
+        video_url = f"{server_url}/api/view?filename={filename}.mp4&type=output&subfolder={save_dir}&t={t13}"
+        return os.path.join(save_dir, filename+'.mp4'), video_url
+
+
 class SaveVideo:
     def __init__(self):
         self.output_dir = folder_paths.get_output_directory()
@@ -1061,7 +1093,7 @@ class SaveVideo:
 
     OUTPUT_NODE = True
     RETURN_TYPES = ()
-    RETURN_NAMES = ("video",)
+    RETURN_NAMES = ()
     FUNCTION = "save_video"
     CATEGORY = 'ComfyUI-Light-Tool/Video'
     DESCRIPTION = "Saves the video by video url to your directory"
@@ -1619,6 +1651,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: SolidColorBackground": AdvancedSolidColorBackground,
     "Light-Tool: ImageConcat": ImageConcat,
     "Light-Tool: PreviewVideo": PreviewVideo,
+    "Light-Tool: LoadVideo": LoadVideo,
     "Light-Tool: SaveVideo": SaveVideo,
     "Light-Tool: SaveToAliyunOSS": SaveToAliyunOSS
 }
@@ -1656,6 +1689,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: SolidColorBackground": "Light-Tool: SolidColorBackground",
     "Light-Tool: ImageConcat": "Light-Tool: Image Concat",
     "Light-Tool: PreviewVideo": "Light-Tool: Preview Video",
+    "Light-Tool: LoadVideo": "Light-Tool: Load Video",
     "Light-Tool: SaveVideo": "Light-Tool: Save Video",
     "Light-Tool: SaveToAliyunOSS": "Light-Tool: Save File To Aliyun OSS"
 }
