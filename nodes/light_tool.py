@@ -1047,34 +1047,35 @@ class PreviewVideo:
 
 class LoadVideo:
     def __init__(self):
-        self.output_dir = folder_paths.get_output_directory()
+        self.input_dir = folder_paths.get_input_directory()
 
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
                 "video_url": ("STRING", {"defaultInput": True}),
-                "server": ("STRING", {"defaultInput": False, "default": '', "placeholder": "local server address"}),
+                "server": ("STRING", {"defaultInput": False, "default": '', "placeholder": "server address"}),
                 "save_dir": ("STRING", {"defaultInput": False, "default": ''}),
             }
         }
 
     OUTPUT_NODE = True
-    RETURN_TYPES = ("STRING", "STRING")
-    RETURN_NAMES = ("video_path", "video_url")
+    RETURN_TYPES = ("STRING", "STRING", "STRING")
+    RETURN_NAMES = ("video_name", "video_path", "video_url")
     FUNCTION = "load_video"
     CATEGORY = 'ComfyUI-Light-Tool/Video'
     DESCRIPTION = "Load the video from video url and save to your directory"
 
     def load_video(self, video_url, server, save_dir):
-        filename = str(uuid.uuid4())
-        save_file_path = os.path.join(self.output_dir, save_dir)
+        filename = str(uuid.uuid4()) + ".mp4"
+        save_file_path = os.path.join(self.input_dir, save_dir)
         os.makedirs(save_file_path, exist_ok=True)
-        download_file(video_url, os.path.join(save_file_path, filename + ".mp4"))
+        full_file_path = os.path.join(save_file_path, filename)
+        download_file(video_url, full_file_path)
         t13 = int(time.time() * 1000)
         server_url = server.split('?')[0].strip().rstrip('/')
-        video_url = f"{server_url}/api/view?filename={filename}.mp4&type=output&subfolder={save_dir}&t={t13}"
-        return os.path.join(save_dir, filename+'.mp4'), video_url
+        video_url = f"{server_url}/api/view?filename={filename}&type=input&subfolder={save_dir}&t={t13}"
+        return filename, full_file_path, video_url
 
 
 class SaveVideo:
@@ -1086,7 +1087,7 @@ class SaveVideo:
         return {
             "required": {
                 "video_url": ("STRING", {"defaultInput": True}),
-                "server": ("STRING", {"defaultInput": False, "default": '', "placeholder": "local server address"}),
+                "server": ("STRING", {"defaultInput": False, "default": '', "placeholder": "server address"}),
                 "save_dir": ("STRING", {"defaultInput": False, "default": ''}),
             }
         }
