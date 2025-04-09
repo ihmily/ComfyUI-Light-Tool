@@ -4,6 +4,7 @@
 @nickname: ComfyUI-Light-Tool
 @description: An awesome light image processing tool nodes for ComfyUI.
 """
+import json
 import sys
 import os
 import io
@@ -14,6 +15,8 @@ import uuid
 import numpy as np
 from PIL import ImageSequence, ImageOps
 from typing import Any, Tuple
+
+from PIL.PngImagePlugin import PngInfo
 from torchvision.transforms import functional
 import folder_paths
 import node_helpers
@@ -1618,6 +1621,81 @@ class UpscaleImage:
         return (result_img,)
 
 
+class LoadMetadataFromURL:
+    def __init__(self):
+        self.input_dir = folder_paths.get_input_directory()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image_url": ("STRING",)
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("metadata",)
+    FUNCTION = "load_metadata"
+    CATEGORY = 'ComfyUI-Light-Tool/ImageInfo'
+    DESCRIPTION = "Load metadata from image"
+
+    def load_metadata(self, image_url):
+        try:
+            filename = image_url.split('?')[0].rsplit('/')[-1] + '.png'
+            filepath = os.path.join(self.input_dir, filename)
+            download_file(image_url, filepath)
+            source_img = Image.open(filepath)
+            source_metadata = source_img.info
+        except json.JSONDecodeError:
+            source_metadata = {}
+        return (json.dumps(source_metadata, ensure_ascii=False),)
+
+
+class SaveMetadata:
+    def __init__(self):
+        self.output_dir = folder_paths.get_output_directory()
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "metadata": ("STRING", {"multiline": True})
+            }
+        }
+
+    OUTPUT_NODE = True
+    RETURN_TYPES = ()
+    FUNCTION = "add_metadata_to_image"
+    CATEGORY = 'ComfyUI-Light-Tool/ImageInfo'
+    DESCRIPTION = "Add metadata to image"
+
+    def add_metadata_to_image(self, image, metadata):
+        try:
+            img = tensor2pil(image)
+            metadata_dict = json.loads(metadata)
+            metadata = PngInfo()
+
+            if "prompt" or "workflow" in metadata_dict:
+                for k, v in metadata_dict.items():
+                    metadata.add_text(k, v if isinstance(v, str) else json.dumps(v, ensure_ascii=False))
+            else:
+                metadata.add_text("workflow", json.dumps(metadata_dict, ensure_ascii=False))
+
+            filename = str(uuid.uuid4()) + '.png'
+            filepath = os.path.join(self.output_dir, filename)
+            img.save(filepath, pnginfo=metadata)
+
+            results = [{
+                "filename": filename,
+                "subfolder": "",
+                "type": "output"
+            }]
+            return {"ui": {"images": results}}
+        except Exception as e:
+            raise Exception(f"SaveMetadata(Light-Tool): Failed to save metadata to image, {e}")
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
     "Light-Tool: InputTextList": InputTextList,
@@ -1654,7 +1732,9 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: PreviewVideo": PreviewVideo,
     "Light-Tool: LoadVideo": LoadVideo,
     "Light-Tool: SaveVideo": SaveVideo,
-    "Light-Tool: SaveToAliyunOSS": SaveToAliyunOSS
+    "Light-Tool: SaveToAliyunOSS": SaveToAliyunOSS,
+    "Light-Tool: LoadMetadataFromURL": LoadMetadataFromURL,
+    "Light-Tool: SaveMetadata": SaveMetadata
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -1692,5 +1772,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: PreviewVideo": "Light-Tool: Preview Video",
     "Light-Tool: LoadVideo": "Light-Tool: Load Video",
     "Light-Tool: SaveVideo": "Light-Tool: Save Video",
-    "Light-Tool: SaveToAliyunOSS": "Light-Tool: Save File To Aliyun OSS"
+    "Light-Tool: SaveToAliyunOSS": "Light-Tool: Save File To Aliyun OSS",
+    "Light-Tool: LoadMetadataFromURL": "Light-Tool: Load Metadata From URL",
+    "Light-Tool: SaveMetadata": "Light-Tool: Save Metadata"
 }
