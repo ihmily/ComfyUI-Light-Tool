@@ -1696,6 +1696,29 @@ class SaveMetadata:
             raise Exception(f"SaveMetadata(Light-Tool): Failed to save metadata to image, {e}")
 
 
+class GetImagesCount:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("count",)
+    FUNCTION = "get_count"
+    CATEGORY = 'ComfyUI-Light-Tool/image/other'
+    DESCRIPTION = "Get images count"
+
+    @staticmethod
+    def get_count(image):
+        return (len(image),)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
     "Light-Tool: InputTextList": InputTextList,
@@ -1734,7 +1757,8 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: SaveVideo": SaveVideo,
     "Light-Tool: SaveToAliyunOSS": SaveToAliyunOSS,
     "Light-Tool: LoadMetadataFromURL": LoadMetadataFromURL,
-    "Light-Tool: SaveMetadata": SaveMetadata
+    "Light-Tool: SaveMetadata": SaveMetadata,
+    "Light-Tool: GetImagesCount": GetImagesCount
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -1774,5 +1798,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: SaveVideo": "Light-Tool: Save Video",
     "Light-Tool: SaveToAliyunOSS": "Light-Tool: Save File To Aliyun OSS",
     "Light-Tool: LoadMetadataFromURL": "Light-Tool: Load Metadata From URL",
-    "Light-Tool: SaveMetadata": "Light-Tool: Save Metadata"
+    "Light-Tool: SaveMetadata": "Light-Tool: Save Metadata",
+    "Light-Tool: GetImagesCount": "Light-Tool: Get Images Count"
 }
