@@ -91,7 +91,7 @@ def download_file(url, file_name):
                       'Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.58'
     }
     with httpx.Client() as client:
-        response = client.get(url, headers=headers)
+        response = client.get(url, headers=headers, follow_redirects=True)
         response.raise_for_status()
 
         with open(file_name, "wb") as file:
