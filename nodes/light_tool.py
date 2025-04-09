@@ -1636,7 +1636,7 @@ class LoadMetadataFromURL:
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("metadata",)
     FUNCTION = "load_metadata"
-    CATEGORY = 'ComfyUI-Light-Tool/ImageInfo'
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
     DESCRIPTION = "Load metadata from image"
 
     def load_metadata(self, image_url):
@@ -1660,14 +1660,14 @@ class SaveMetadata:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "metadata": ("STRING", {"multiline": True})
+                "metadata": ("STRING", {"defaultInput": True, "multiline": True})
             }
         }
 
     OUTPUT_NODE = True
     RETURN_TYPES = ()
     FUNCTION = "add_metadata_to_image"
-    CATEGORY = 'ComfyUI-Light-Tool/ImageInfo'
+    CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
     DESCRIPTION = "Add metadata to image"
 
     def add_metadata_to_image(self, image, metadata):
