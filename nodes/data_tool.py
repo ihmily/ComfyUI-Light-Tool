@@ -185,17 +185,49 @@ class Calculate:
         return (result, )
 
 
+class ConvertNumType:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "number": (any_type, {"default": '', "multiline": False}),
+                "return_type": (["INT", "FLOAT", "STRING"], {"default": "INT"}),
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("number",)
+    FUNCTION = "convert"
+    CATEGORY = 'ComfyUI-Light-Tool/DataProcessing'
+    DESCRIPTION = "Convert numeric types"
+
+    @staticmethod
+    def convert(number, return_type):
+        if return_type == "FLOAT":
+            number = float(number)
+        elif return_type == "INT":
+            number = round(float(number))
+        else:
+            number = str(number)
+        return (number,)
+
+
 NODE_CLASS_MAPPINGS = {
 
     "Light-Tool: KeyValue": KeyValue,
     "Light-Tool: SerializeJsonObject": SerializeJsonObject,
     "Light-Tool: DeserializeJsonString": DeserializeJsonString,
-    "Light-Tool: Calculate": Calculate
+    "Light-Tool: Calculate": Calculate,
+    "Light-Tool: ConvertNumType": ConvertNumType
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: KeyValue": "Light-Tool: Get values from JSON",
     "Light-Tool: SerializeJsonObject": "Light-Tool: Serialize a JSON object",
     "Light-Tool: DeserializeJsonString": "Light-Tool: Deserialize a JSON string",
-    "Light-Tool: Calculate": "Light-Tool: Calculate"
+    "Light-Tool: Calculate": "Light-Tool: Calculate",
+    "Light-Tool: ConvertNumType": "Light-Tool: Convert Num Type"
 }
