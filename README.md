@@ -1,7 +1,7 @@
 # ComfyUI-Light-Tool
 [![comfyui-light-tool](https://img.shields.io/badge/comfyui-light-tool)](https://registry.comfy.org/nodes/comfyui-light-tool)
 
-An awesome  image processing tool  node for ComfyUI. 
+An awesome  light tool  node for ComfyUI. 
 
 This node offers the following image processing capabilities:
 
