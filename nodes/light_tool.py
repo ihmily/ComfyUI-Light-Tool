@@ -2,7 +2,7 @@
 @author: Hmily
 @title: ComfyUI-Light-Tool
 @nickname: ComfyUI-Light-Tool
-@description: An awesome light image processing tool nodes for ComfyUI.
+@description: An awesome light tool nodes for ComfyUI.
 """
 import json
 import sys
@@ -873,50 +873,6 @@ class AdvancedSolidColorBackground:
         return (result_img,)
 
 
-class ResizeImage:
-    def __init__(self):
-        pass
-
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "image": ("IMAGE",),
-                "width": ("INT", {"default": 512, "min": 0, "display": "number"}),
-                "height": ("INT", {"default": 512, "min": 0, "display": "number"}),
-                "resize_method": (["LANCZOS", "BICUBIC", "NEAREST", "BILINEAR"], {"default": "LANCZOS"}),
-                "mode": (["RGB", "RGBA", "L"], {"default": "RGB"}),
-            },
-        }
-
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
-    FUNCTION = "resize_img"
-    CATEGORY = 'ComfyUI-Light-Tool/image/ImageCrop'
-    DESCRIPTION = "Crop an image based on its width and height"
-
-    @staticmethod
-    def resize_img(image, width, height, resize_method, mode):
-        image = tensor2pil(image).convert(mode)
-        if width is None and height is None:
-            raise ValueError("Either new_width or new_height must be provided.")
-        elif width is not None and height is None:
-            height = int((width / image.width) * image.height)
-        elif height is not None and width is None:
-            width = int((height / image.height) * image.width)
-
-        method = {
-            "LANCZOS": Image.LANCZOS,
-            "BICUBIC": Image.BICUBIC,
-            "NEAREST": Image.NEAREST,
-            "BILINEAR": Image.BILINEAR
-        }
-
-        img_resized = image.resize((width, height), method[resize_method])
-        result_img = pil2tensor(img_resized)
-        return (result_img,)
-
-
 class RGB2RGBA:
     def __init__(self):
         pass
@@ -1467,7 +1423,7 @@ class MorphologicalTF:
         return (result_img,)
 
 
-class Hex2Rgb:
+class Hex2RGB:
     def __init__(self):
         pass
 
@@ -1729,7 +1685,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
     "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
     "Light-Tool: GetImageSize": GetImageSize,
-    "Light-Tool: Hex2Rgb": Hex2Rgb,
+    "Light-Tool: Hex2RGB": Hex2RGB,
     "Light-Tool: MaskToImage": MaskToImage,
     "Light-Tool: ImageToMask": ImageToMask,
     "Light-Tool: InvertMask": InvertMask,
@@ -1742,7 +1698,6 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: BoundingBoxCropping": BoundingBoxCropping,
     "Light-Tool: AddBackground": AddBackground,
     "Light-Tool: AddBackgroundV2": AddBackgroundV2,
-    "Light-Tool: ResizeImage": ResizeImage,
     "Light-Tool: UpscaleImage": UpscaleImage,
     "Light-Tool: ScaleImage": ScaleImage,
     "Light-Tool: IsTransparent": IsTransparent,
@@ -1771,7 +1726,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
     "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",
     "Light-Tool: GetImageSize": "Light-Tool: Get Image Size",
-    "Light-Tool: Hex2Rgb": "Light-Tool: Hex to Rgb",
+    "Light-Tool: Hex2RGB": "Light-Tool: Hex to RGB",
     "Light-Tool: MaskToImage": "Light-Tool: Mask to Image",
     "Light-Tool: ImageToMask": "Light-Tool: Image to Mask",
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
@@ -1784,7 +1739,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: BoundingBoxCropping": "Light-Tool: Bounding Box Cropping",
     "Light-Tool: AddBackground": "Light-Tool: Add solid color background",
     "Light-Tool: AddBackgroundV2": "Light-Tool: Add solid color background V2",
-    "Light-Tool: ResizeImage": "Light-Tool: Resize Image",
     "Light-Tool: UpscaleImage": "Light-Tool: Upscale Image",
     "Light-Tool: ScaleImage": "Light-Tool: Scale Image",
     "Light-Tool: IsTransparent": "Light-Tool: Is Transparent",
