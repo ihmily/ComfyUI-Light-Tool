@@ -21,8 +21,8 @@ from torchvision.transforms import functional
 import folder_paths
 import node_helpers
 from oss_tool import oss_upload
-from upscale import UpscaleMode, upscale_image
-from scale import ScaleMode, scale_image
+from image_upscale import UpscaleMode, upscale_image
+from image_scale import ScaleMode, scale_image
 
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
