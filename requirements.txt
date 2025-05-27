@@ -4,3 +4,4 @@ pillow
 opencv-python
 oss2
 httpx
+pycryptodome

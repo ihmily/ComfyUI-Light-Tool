@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import oss2
-
 
 def oss_upload(
         file,
@@ -32,6 +30,9 @@ def oss_upload(
      :param timeout: (可选) 签名URL的有效期，单位为秒。
      :return: 上传后的URL或错误信息。
      """
+
+    import oss2
+
     if oss_session_token:
         auth = oss2.StsAuth(
             access_key_id=oss_access_key_id,
