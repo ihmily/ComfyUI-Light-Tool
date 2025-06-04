@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-light-tool"
 description = "An awesome light tool nodes for ComfyUI."
-version = "1.4.2"
+version = "1.4.3"
 license = { file = "LICENSE" }
 dependencies = ["numpy", "pillow", "torch", "opencv-python", "httpx", "opendatalab==0.0.9", "oss2", "pycryptodome"]
 

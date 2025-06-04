@@ -605,21 +605,24 @@ class SimpleImageOverlay:
 
     @staticmethod
     def combine_images(foreground: torch.Tensor, background: torch.Tensor, center, left, top):
+        image_list = []
+        for bg in background:
+            foreground_pil = tensor2pil(foreground)
+            if foreground_pil.mode != "RGBA":
+                foreground_pil = foreground_pil.convert("RGBA")
+            background_pil = tensor2pil(bg)
 
-        foreground_pil = tensor2pil(foreground)
-        if foreground_pil.mode != "RGBA":
-            foreground_pil = foreground_pil.convert("RGBA")
-        background_pil = tensor2pil(background)
+            if center:
+                bg_width, bg_height = background_pil.size
+                fg_width, fg_height = foreground_pil.size
+                left = (bg_width - fg_width) // 2
+                top = (bg_height - fg_height) // 2
 
-        if center:
-            bg_width, bg_height = background_pil.size
-            fg_width, fg_height = foreground_pil.size
-            left = (bg_width - fg_width) // 2
-            top = (bg_height - fg_height) // 2
-
-        background_pil.paste(foreground_pil, (left, top), foreground_pil)
-        result = pil2tensor(background_pil)
-        return (result, )
+            background_pil.paste(foreground_pil, (left, top), foreground_pil)
+            result = pil2tensor(background_pil)
+            image_list.append(result)
+        images = torch.cat(image_list, dim=0)
+        return (images,)
 
 
 class AddBackgroundV2:
