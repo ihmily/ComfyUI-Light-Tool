@@ -1441,7 +1441,7 @@ class Hex2RGB:
     RETURN_TYPES = ("INT", "INT", "INT")
     RETURN_NAMES = ("R", "G", "B")
     FUNCTION = "hex2rgb"
-    CATEGORY = 'ComfyUI-Light-Tool/image/ImageInfo'
+    CATEGORY = 'ComfyUI-Light-Tool/image/Color'
     DESCRIPTION = "Hex color code convert to RGB code"
 
     @staticmethod
@@ -1452,6 +1452,34 @@ class Hex2RGB:
             return 255, 255, 255
         else:
             return hex_to_rgb(color_hex)
+
+
+class RGB2Hex:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "R": ("INT", {"default": "255", "min": 0, "max": 255, "display": "number"}),
+                "G": ("INT", {"default": "0", "min": 0, "max": 255, "display": "number"}),
+                "B": ("INT", {"default": "0", "min": 0, "max": 255, "display": "number"}),
+            },
+        }
+
+    RETURN_TYPES = "STRING",
+    RETURN_NAMES = "hex_color",
+    FUNCTION = "rgb2hex"
+    CATEGORY = 'ComfyUI-Light-Tool/image/Color'
+    DESCRIPTION = "RGB code convert to Hex color code"
+
+    @staticmethod
+    def rgb2hex(R, G, B):
+        if not (0 <= int(R) <= 255 and 0 <= int(G) <= 255 and 0 <= int(B) <= 255):
+            raise ValueError("RGB values must be between 0 and 255")
+
+        return "#{:02X}{:02X}{:02X}".format(int(R), int(G), int(B)),
 
 
 class ScaleImage:
@@ -1689,6 +1717,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
     "Light-Tool: GetImageSize": GetImageSize,
     "Light-Tool: Hex2RGB": Hex2RGB,
+    "Light-Tool: RGB2Hex": RGB2Hex,
     "Light-Tool: MaskToImage": MaskToImage,
     "Light-Tool: ImageToMask": ImageToMask,
     "Light-Tool: InvertMask": InvertMask,
@@ -1730,6 +1759,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",
     "Light-Tool: GetImageSize": "Light-Tool: Get Image Size",
     "Light-Tool: Hex2RGB": "Light-Tool: Hex to RGB",
+    "Light-Tool: RGB2Hex": "Light-Tool: RGB to Hex",
     "Light-Tool: MaskToImage": "Light-Tool: Mask to Image",
     "Light-Tool: ImageToMask": "Light-Tool: Image to Mask",
     "Light-Tool: InvertMask": "Light-Tool: Invert Mask",
