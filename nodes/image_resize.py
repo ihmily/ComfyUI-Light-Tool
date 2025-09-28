@@ -161,6 +161,56 @@ class ResizeImageByMaxSize:
         return (result_img,)
 
 
+class ResizeImageByMinSize:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "min_width": ("INT", {"default": 512, "min": 0, "display": "number"}),
+                "min_height": ("INT", {"default": 512, "min": 0, "display": "number"}),
+                "resize_method": (["LANCZOS", "BICUBIC", "NEAREST", "BILINEAR"], {"default": "LANCZOS"}),
+                "mode": (["RGB", "RGBA", "L"], {"default": "RGB"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "resize_img_by_min_size"
+    CATEGORY = 'ComfyUI-Light-Tool/image/Resize'
+    DESCRIPTION = ("Resize the image proportionally to ensure its resolution does not fall below the specified minimum "
+                   "size")
+
+    @staticmethod
+    def resize_img_by_min_size(image, min_width, min_height, resize_method, mode):
+        image = tensor2pil(image).convert(mode)
+
+        method = {
+            "LANCZOS": Resampling.LANCZOS,
+            "BICUBIC": Resampling.BICUBIC,
+            "NEAREST": Resampling.NEAREST,
+            "BILINEAR": Resampling.BILINEAR
+        }
+
+        original_width, original_height = image.size
+        ratio_w = min_width / original_width
+        ratio_h = min_height / original_height
+        ratio = max(ratio_w, ratio_h)
+
+        if ratio <= 1:
+            return (pil2tensor(image),)
+
+        new_width = int(original_width * ratio)
+        new_height = int(original_height * ratio)
+
+        resized_img = image.resize((new_width, new_height), method[resize_method])
+        result_img = pil2tensor(resized_img)
+        return (result_img,)
+
+
 class ResizeImageByRatio:
     def __init__(self):
         pass
@@ -205,12 +255,14 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: ResizeImage": ResizeImage,
     "Light-Tool: ResizeImageV2": ResizeImageV2,
     "Light-Tool: ResizeImageByRatio": ResizeImageByRatio,
-    "Light-Tool: ResizeImageByMaxSize": ResizeImageByMaxSize
+    "Light-Tool: ResizeImageByMaxSize": ResizeImageByMaxSize,
+    "Light-Tool: ResizeImageByMinSize": ResizeImageByMinSize
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: ResizeImage": "Light-Tool: Resize Image",
     "Light-Tool: ResizeImageV2": "Light-Tool: Resize Image V2",
     "Light-Tool: ResizeImageByRatio": "Light-Tool: Resize Image By Ratio",
-    "Light-Tool: ResizeImageByMaxSize": "Light-Tool: Resize Image By Max Size"
+    "Light-Tool: ResizeImageByMaxSize": "Light-Tool: Resize Image By Max Size",
+    "Light-Tool: ResizeImageByMinSize": "Light-Tool: Resize Image By Min Size"
 }
