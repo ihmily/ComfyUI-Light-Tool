@@ -1706,6 +1706,36 @@ class GetImagesCount:
         return (len(image),)
 
 
+class GetSideLength:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "mode":  (["longest", "shortest"], {"default": "longest"}),
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("length",)
+    FUNCTION = "get_side_length"
+    CATEGORY = 'ComfyUI-Light-Tool/image/other'
+    DESCRIPTION = "Get longest side"
+
+    @staticmethod
+    def get_side_length(image, mode):
+        img = tensor2pil(image)
+        width, height = img.size
+        if mode == "shortest":
+            length = min(width, height)
+        else:
+            length = max(width, height)
+        return (length,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
     "Light-Tool: InputTextList": InputTextList,
@@ -1745,7 +1775,8 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: SaveToAliyunOSS": SaveToAliyunOSS,
     "Light-Tool: LoadMetadataFromURL": LoadMetadataFromURL,
     "Light-Tool: SaveMetadata": SaveMetadata,
-    "Light-Tool: GetImagesCount": GetImagesCount
+    "Light-Tool: GetImagesCount": GetImagesCount,
+    "Light-Tool: GetSideLength": GetSideLength,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -1786,5 +1817,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: SaveToAliyunOSS": "Light-Tool: Save File To Aliyun OSS",
     "Light-Tool: LoadMetadataFromURL": "Light-Tool: Load Metadata From URL",
     "Light-Tool: SaveMetadata": "Light-Tool: Save Metadata",
-    "Light-Tool: GetImagesCount": "Light-Tool: Get Images Count"
+    "Light-Tool: GetImagesCount": "Light-Tool: Get Images Count",
+    "Light-Tool: GetSideLength": "Light-Tool: Get Side Length"
 }
