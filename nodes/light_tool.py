@@ -943,7 +943,7 @@ class InputText:
         return {
             "required": {
                 "input_text": (
-                    "STRING", {"defaultInput": False, "multiline": True, "placeholder": "Please input text"}),
+                    "STRING", {"multiline": True, "placeholder": "Please input text"}),
             },
         }
 
@@ -964,7 +964,7 @@ class ShowText:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "text": (any_type, {"defaultInput": True, "multiline": True}),
+                "text": (any_type, {"multiline": True}),
             }
         }
 
@@ -990,7 +990,7 @@ class PreviewVideo:
             "required": {
                 "video_url": (
                     "STRING",
-                    {"defaultInput": True, "multiline": True, "placeholder": "Please input video url"}
+                    {"multiline": True, "placeholder": "Please input video url"}
                 )
             }
         }
@@ -1015,9 +1015,9 @@ class LoadVideo:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "video_url": ("STRING", {"defaultInput": True}),
-                "server": ("STRING", {"defaultInput": False, "default": '', "placeholder": "server address"}),
-                "save_dir": ("STRING", {"defaultInput": False, "default": ''}),
+                "video_url": ("STRING",),
+                "server": ("STRING", {"default": '', "placeholder": "server address"}),
+                "save_dir": ("STRING", {"default": ''}),
             }
         }
 
@@ -1048,9 +1048,9 @@ class SaveVideo:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "video_url": ("STRING", {"defaultInput": True}),
-                "server": ("STRING", {"defaultInput": False, "default": '', "placeholder": "server address"}),
-                "save_dir": ("STRING", {"defaultInput": False, "default": ''}),
+                "video_url": ("STRING", ),
+                "server": ("STRING", {"default": '', "placeholder": "server address"}),
+                "save_dir": ("STRING", {"default": ''}),
             }
         }
 
@@ -1081,7 +1081,7 @@ class SaveVideoToAliyunOss:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "file": ("STRING", {"defaultInput": True}),
+                "file": ("STRING", ),
                 "save_name": ("STRING", {"default": ""}),
                 "endpoint": ("STRING", {"default": ""}),
                 "bucket": ("STRING", {"default": ""}),
@@ -1143,7 +1143,7 @@ class SaveToAliyunOSS:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "file": ("STRING", {"defaultInput": True}),
+                "file": ("STRING", ),
                 "save_name": ("STRING", {"default": ""}),
                 "endpoint": ("STRING", {"default": ""}),
                 "bucket": ("STRING", {"default": ""}),
@@ -1647,7 +1647,7 @@ class SaveMetadata:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "metadata": ("STRING", {"defaultInput": True, "multiline": True})
+                "metadata": ("STRING", {"multiline": True})
             }
         }
 

@@ -73,7 +73,7 @@ class SerializeJsonObject:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "json_object": (any_type, {"default": json.loads('{"key": "This is value"}'), "defaultInput": True}),
+                "json_object": (any_type, {"default": json.loads('{"key": "This is value"}')}),
             }
         }
 
@@ -128,13 +128,13 @@ class Calculate:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "number1": (any_type, {"defaultInput": False, "default": "1.0", "multiline": False}),
-                "number2": (any_type, {"defaultInput": False, "default": "1.0", "multiline": False}),
-                "operator": (any_type, {"defaultInput": False, "default": "+", "multiline": False}),
+                "number1": (any_type, {"default": "1.0", "multiline": False}),
+                "number2": (any_type, {"default": "1.0", "multiline": False}),
+                "operator": (any_type, {"default": "+", "multiline": False}),
                 "return_type": (["INT", "FLOAT", "STRING"], {"default": "FLOAT"}),
             },
             "optional": {
-                "description": ("STRING", {"defaultInput": False, "default": "", "multiline": True}),
+                "description": ("STRING", {"default": "", "multiline": True}),
             }
         }
 
