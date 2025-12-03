@@ -1777,6 +1777,56 @@ class GetSideLength:
         return (length,)
 
 
+class TextReplace:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text": ("STRING", {"multiline": True, "placeholder": "Input text to process"}),
+                "search": ("STRING", {"multiline": False, "placeholder": "Text to search"}),
+                "replace": ("STRING", {"multiline": False, "placeholder": "Replacement text"}),
+                "use_regex": ("BOOLEAN", {"default": False, "label_on": "enabled", "label_off": "disabled"}),
+                "case_sensitive": ("BOOLEAN", {"default": True, "label_on": "enabled", "label_off": "disabled"}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text",)
+    FUNCTION = "text_replace"
+    CATEGORY = 'ComfyUI-Light-Tool/Text'
+    DESCRIPTION = "Replace text with simple or regex patterns"
+
+    @staticmethod
+    def text_replace(text, search, replace, use_regex, case_sensitive):
+        import re
+        
+        if not search:
+            return (text,)
+        
+        try:
+            result = text
+            if use_regex:
+                flags = re.S | (0 if case_sensitive else re.IGNORECASE)
+                match_result = re.findall(search, text, flags)
+                for i in match_result:
+                    result = result.replace(i, replace)
+            else:
+                if case_sensitive:
+                    result = result.replace(search, replace)
+                else:
+                    pattern = re.compile(re.escape(search), re.IGNORECASE)
+                    result = pattern.sub(replace, text)
+            
+            return (result,)
+        except re.error as e:
+            raise ValueError(f"TextReplace(Light-Tool): Invalid regex pattern: {e}")
+        except Exception as e:
+            raise ValueError(f"TextReplace(Light-Tool): Error during replacement: {e}")
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
     "Light-Tool: InputTextList": InputTextList,
@@ -1784,6 +1834,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: ShowAnything": ShowAnything,
     "Light-Tool: TextConnect": TextConnect,
     "Light-Tool: SimpleTextConnect": SimpleTextConnect,
+    "Light-Tool: TextReplace": TextReplace,
     "Light-Tool: LoadImage": LoadImage,
     "Light-Tool: LoadImageFromURL": LoadImageFromURL,
     "Light-Tool: LoadImagesFromDir": LoadImagesFromDir,
@@ -1828,6 +1879,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: InputTextList": "Light-Tool: Input Text List",
     "Light-Tool: TextConnect": "Light-Tool: Connect Text Strings",
     "Light-Tool: SimpleTextConnect": "Light-Tool: Simple Connect Text Strings",
+    "Light-Tool: TextReplace": "Light-Tool: Text Replace",
     "Light-Tool: LoadImage": "Light-Tool: Load Image",
     "Light-Tool: LoadImageFromURL": "Light-Tool: Load Image From URL",
     "Light-Tool: LoadImagesFromDir": "Light-Tool: Load Image List",
