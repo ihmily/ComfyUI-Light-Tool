@@ -983,6 +983,47 @@ class ShowText:
         return {"ui": {"text": output}, "result": (output,)}
 
 
+class ShowAnything:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "anything": (any_type, {}),
+            }
+        }
+
+    OUTPUT_NODE = True
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("output",)
+    FUNCTION = "show_anything"
+    CATEGORY = 'ComfyUI-Light-Tool/Utility'
+    DESCRIPTION = "Show anything - displays any type of data in a readable format"
+
+    @staticmethod
+    def show_anything(anything):
+        import json
+        
+        def format_value(value):
+            """Convert various types to readable string format"""
+            if isinstance(value, (str, int, float, bool)):
+                return str(value)
+            elif isinstance(value, dict):
+                try:
+                    return json.dumps(value, indent=2, ensure_ascii=False)
+                except:
+                    return str(value)
+            elif isinstance(value, (list, tuple)):
+                try:
+                    return json.dumps(value, indent=2, ensure_ascii=False)
+                except:
+                    return str(value)
+            else:
+                return str(value)
+        
+        output_text = format_value(anything)
+        return {"ui": {"text": [output_text]}, "result": (anything,)}
+
+
 class PreviewVideo:
     @classmethod
     def INPUT_TYPES(cls):
@@ -1740,6 +1781,7 @@ NODE_CLASS_MAPPINGS = {
     "Light-Tool: InputText": InputText,
     "Light-Tool: InputTextList": InputTextList,
     "Light-Tool: ShowText": ShowText,
+    "Light-Tool: ShowAnything": ShowAnything,
     "Light-Tool: TextConnect": TextConnect,
     "Light-Tool: SimpleTextConnect": SimpleTextConnect,
     "Light-Tool: LoadImage": LoadImage,
@@ -1782,6 +1824,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: InputText": "Light-Tool: Input Text",
     "Light-Tool: ShowText": "Light-Tool: Show Text",
+    "Light-Tool: ShowAnything": "Light-Tool: Show Anything",
     "Light-Tool: InputTextList": "Light-Tool: Input Text List",
     "Light-Tool: TextConnect": "Light-Tool: Connect Text Strings",
     "Light-Tool: SimpleTextConnect": "Light-Tool: Simple Connect Text Strings",
