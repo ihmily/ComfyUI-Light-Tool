@@ -11,7 +11,6 @@ import io
 import hashlib
 import time
 import uuid
-
 import numpy as np
 from PIL import ImageSequence, ImageOps
 from typing import Any, Tuple
@@ -663,6 +662,10 @@ class AddBackgroundV2:
         image_list = []
         for img in image:
             overlay = tensor2pil(img)
+
+            if overlay.mode != 'RGBA':
+                overlay = overlay.convert('RGBA')
+
             width, height = overlay.size
             if square:
                 if width > height:
@@ -1001,26 +1004,23 @@ class ShowAnything:
 
     @staticmethod
     def show_anything(anything):
-        import json
-        
+
         def format_value(value):
             """Convert various types to readable string format"""
-            if isinstance(value, (str, int, float, bool)):
-                return str(value)
-            elif isinstance(value, dict):
+            if isinstance(value, str):
+                return value
+
+            if isinstance(value, (list, tuple, dict)):
                 try:
-                    return json.dumps(value, indent=2, ensure_ascii=False)
-                except:
+                    return json.dumps(value, indent=2, ensure_ascii=False, default=str)
+                except Exception as e:
+                    print(e)
                     return str(value)
-            elif isinstance(value, (list, tuple)):
-                try:
-                    return json.dumps(value, indent=2, ensure_ascii=False)
-                except:
-                    return str(value)
-            else:
-                return str(value)
-        
+
         output_text = format_value(anything)
+        if isinstance(anything, np.bool_):
+            anything = bool(anything)
+
         return {"ui": {"text": [output_text]}, "result": (anything,)}
 
 
@@ -1802,10 +1802,10 @@ class TextReplace:
     @staticmethod
     def text_replace(text, search, replace, use_regex, case_sensitive):
         import re
-        
+
         if not search:
             return (text,)
-        
+
         try:
             result = text
             if use_regex:
@@ -1819,7 +1819,7 @@ class TextReplace:
                 else:
                     pattern = re.compile(re.escape(search), re.IGNORECASE)
                     result = pattern.sub(replace, text)
-            
+
             return (result,)
         except re.error as e:
             raise ValueError(f"TextReplace(Light-Tool): Invalid regex pattern: {e}")

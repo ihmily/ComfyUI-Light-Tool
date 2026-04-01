@@ -60,10 +60,49 @@ class CropImage:
         return (result_img,)
 
 
+class SafeImageCrop:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "multiple_of": (["8", "16", "32", "64", "128", "256", "512", "1024"], {"default": "64"}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "safe_crop"
+    CATEGORY = "ComfyUI-Light-Tool/image/Crop"
+    DESCRIPTION = ("Crops image from center to the nearest multiple (e.g., 64) to "
+                   "ensure compatibility with VAE/Latent space.")
+
+    def safe_crop(self, image, multiple_of):
+        multiple_of = int(multiple_of)
+
+        height = image.shape[1]
+        width = image.shape[2]
+
+        target_height = (height // multiple_of) * multiple_of
+        target_width = (width // multiple_of) * multiple_of
+
+        if target_height == 0 or target_width == 0:
+            print(f"Warning: Image size ({width}x{height}) is too small for multiple of {multiple_of}.")
+            return (image,)
+
+        y_start = (height - target_height) // 2
+        x_start = (width - target_width) // 2
+
+        cropped_image = image[:, y_start:y_start + target_height, x_start:x_start + target_width, :]
+
+        return (cropped_image,)
+
+
 NODE_CLASS_MAPPINGS = {
-    "Light-Tool: CropImage": CropImage
+    "Light-Tool: CropImage": CropImage,
+    "Light-Tool: SafeImageCrop": SafeImageCrop,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Light-Tool: CropImage": "Light-Tool: Crop Image"
+    "Light-Tool: CropImage": "Light-Tool: Crop Image",
+    "Light-Tool: SafeImageCrop": "Light-Tool: Safe Image Crop"
 }

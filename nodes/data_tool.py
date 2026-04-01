@@ -130,22 +130,21 @@ class Calculate:
             "required": {
                 "number1": (any_type, {"default": "1.0", "multiline": False}),
                 "number2": (any_type, {"default": "1.0", "multiline": False}),
-                "operator": (any_type, {"default": "+", "multiline": False}),
-                "return_type": (["INT", "FLOAT", "STRING"], {"default": "FLOAT"}),
+                "operator": (["+", "-", "*", "/", "%"], {"default": "+"}),
             },
             "optional": {
                 "description": ("STRING", {"default": "", "multiline": True}),
             }
         }
 
-    RETURN_TYPES = (any_type,)
-    RETURN_NAMES = ("result",)
+    RETURN_TYPES = ("STRING", "INT", "FLOAT")
+    RETURN_NAMES = ("result_string", "result_int", "result_float")
     FUNCTION = "calculate"
     CATEGORY = 'ComfyUI-Light-Tool/DataProcessing'
     DESCRIPTION = "Simple numerical operations"
 
     @staticmethod
-    def calculate(number1, number2, operator, return_type, description):
+    def calculate(number1, number2, operator, description):
 
         def is_number(value):
             try:
@@ -160,8 +159,8 @@ class Calculate:
         number1 = float(number1)
         number2 = float(number2)
 
-        if operator not in ['+', '-', '*', '/']:
-            raise ValueError("Unsupported operator. Supported operators are '+', '-', '*', '/'.")
+        if operator not in ['+', '-', '*', '/', '%']:
+            raise ValueError("Unsupported operator. Supported operators are '+', '-', '*', '/', '%'.")
 
         if operator == '+':
             result = number1 + number2
@@ -173,16 +172,14 @@ class Calculate:
             if number2 == 0:
                 raise ZeroDivisionError("Division by zero is not allowed.")
             result = number1 / number2
+        elif operator == "%":
+            if number2 == 0:
+                raise ZeroDivisionError("Modulo by zero is not allowed.")
+            result = number1 % number2
         else:
             raise ValueError(f"Unsupported operator {operator}")
 
-        if return_type == "FLOAT":
-            result = float(result)
-        elif return_type == "INT":
-            result = round(result)
-        else:
-            result = str(result)
-        return (result, )
+        return str(result), round(result), float(result)
 
 
 class ConvertNumType:
