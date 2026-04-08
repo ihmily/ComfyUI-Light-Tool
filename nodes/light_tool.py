@@ -1350,6 +1350,10 @@ class TextConnect:
                 "string_2": ("STRING", ),
                 "string_3": ("STRING", ),
                 "string_4": ("STRING", ),
+                "string_5": ("STRING", ),
+                "string_6": ("STRING", ),
+                "string_7": ("STRING", ),
+                "string_8": ("STRING", ),
                 "delimiter": ("STRING", {"default": ""}),
             }
         }
@@ -1377,7 +1381,7 @@ class SimpleTextConnect:
         return {
             "required": {
                 "string1": (any_type, {"default": ""}),
-                "string2": ("STRING", {"default": ""}),
+                "string2": ("STRING", {"default": "", "multiline": True}),
                 "delimiter": ("STRING", {"default": ""}),
             },
             "optional": {
