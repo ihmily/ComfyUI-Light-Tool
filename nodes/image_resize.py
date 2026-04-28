@@ -7,7 +7,6 @@
 import sys
 import os
 
-from PIL import Image
 from PIL.Image import Resampling
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from light_tool_utils import *
@@ -30,8 +29,8 @@ class ResizeImage:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "width": ("INT", {"default": 512, "min": 0, "display": "number"}),
-                "height": ("INT", {"default": 512, "min": 0, "display": "number"}),
+                "width": ("INT", {"default": 512, "min": 0, "max": 8192, "display": "number"}),
+                "height": ("INT", {"default": 512, "min": 0, "max": 8192, "display": "number"}),
                 "resize_method": (["LANCZOS", "BICUBIC", "NEAREST", "BILINEAR"], {"default": "LANCZOS"}),
                 "mode": (["RGB", "RGBA", "L"], {"default": "RGB"}),
             },
@@ -74,8 +73,8 @@ class ResizeImageV2:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "width": ("INT", {"default": 512, "min": 0, "display": "number"}),
-                "height": ("INT", {"default": 512, "min": 0, "display": "number"}),
+                "width": ("INT", {"default": 512, "min": 0, "max": 8192, "display": "number"}),
+                "height": ("INT", {"default": 512, "min": 0, "max": 8192, "display": "number"}),
                 "base": (["width", "height"], {"default": "width"}),
                 "resize_method": (["LANCZOS", "BICUBIC", "NEAREST", "BILINEAR"], {"default": "LANCZOS"}),
                 "mode": (["RGB", "RGBA", "L"], {"default": "RGB"}),
@@ -123,8 +122,8 @@ class ResizeImageByMaxSize:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "max_width": ("INT", {"default": 512, "min": 0, "display": "number"}),
-                "max_height": ("INT", {"default": 512, "min": 0, "display": "number"}),
+                "max_width": ("INT", {"default": 512, "min": 0, "max": 8192, "display": "number"}),
+                "max_height": ("INT", {"default": 512, "min": 0, "max": 8192, "display": "number"}),
                 "resize_method": (["LANCZOS", "BICUBIC", "NEAREST", "BILINEAR"], {"default": "LANCZOS"}),
                 "mode": (["RGB", "RGBA", "L"], {"default": "RGB"}),
             },
@@ -170,8 +169,8 @@ class ResizeImageByMinSize:
         return {
             "required": {
                 "image": ("IMAGE",),
-                "min_width": ("INT", {"default": 512, "min": 0, "display": "number"}),
-                "min_height": ("INT", {"default": 512, "min": 0, "display": "number"}),
+                "min_width": ("INT", {"default": 512, "min": 0, "max": 8192, "display": "number"}),
+                "min_height": ("INT", {"default": 512, "min": 0, "max": 8192, "display": "number"}),
                 "resize_method": (["LANCZOS", "BICUBIC", "NEAREST", "BILINEAR"], {"default": "LANCZOS"}),
                 "mode": (["RGB", "RGBA", "L"], {"default": "RGB"}),
             },
