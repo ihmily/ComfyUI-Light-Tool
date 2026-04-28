@@ -275,12 +275,104 @@ class ResizeImageByRatio:
         return (image,)
 
 
+class AspectRatioPadder:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "target_ratio": (["1:1", "9:16", "16:9", "4:3", "3:2", "2:3"], {"default": "1:1"}),
+                "custom_ratio": ("STRING", {"default": ""}),
+                "base_size": ("INT", {"default": 1024, "min": 64, "max": 4096, "step": 8, "display": "number"}),
+                "color_hex": ("STRING", {"default": "#FFFFFF", "multiline": False}),
+                "use_hex": ("BOOLEAN", {"default": True}),
+                "R": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "G": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+                "B": ("INT", {"default": 255, "min": 0, "max": 255, "display": "number"}),
+            },
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    RETURN_NAMES = ("image",)
+    FUNCTION = "pad_image"
+    CATEGORY = 'ComfyUI-Light-Tool/image/Resize'
+    DESCRIPTION = "Resize image to fit target ratio and pad with white background."
+
+    @staticmethod
+    def pad_image(image, target_ratio, custom_ratio, base_size, color_hex, use_hex, R, G, B):
+        ratio_map = {
+            "1:1": 1.0,
+            "9:16": 9.0 / 16.0,
+            "16:9": 16.0 / 9.0,
+            "4:3": 4.0 / 3.0,
+            "3:2": 3.0 / 2.0,
+            "2:3": 2.0 / 3.0,
+            "None": None
+        }
+
+        target_w_h_ratio = ratio_map.get(custom_ratio or target_ratio)
+        if not target_w_h_ratio:
+            out_images = torch.cat([image], dim=0)
+            return (out_images,)
+
+        image_list = []
+
+        for img in image:
+            pil_img = tensor2pil(img)
+            orig_w, orig_h = pil_img.size
+            orig_ratio = orig_w / orig_h
+
+            if target_w_h_ratio >= 1.0:  # horizontal image (16:9, 4:3, 3:2)
+                target_w = base_size
+                target_h = int(base_size / target_w_h_ratio)
+            else:  # vertical image or Square Map (9:16, 2:3, 1:1)
+                target_h = base_size
+                target_w = int(base_size * target_w_h_ratio)
+
+            target_w = (target_w // 8) * 8
+            target_h = (target_h // 8) * 8
+
+            if use_hex:
+                rgb_background_color = hex_to_rgb(color_hex)
+            else:
+                rgb_background_color = (R, G, B)
+            new_image = Image.new("RGB", (target_w, target_h), rgb_background_color)
+
+            if orig_ratio > target_w_h_ratio:
+                scale_ratio = target_w / orig_w
+            else:
+                scale_ratio = target_h / orig_h
+
+            resize_w = int(orig_w * scale_ratio)
+            resize_h = int(orig_h * scale_ratio)
+
+            resize_w = min(resize_w, target_w)
+            resize_h = min(resize_h, target_h)
+
+            resized_img = pil_img.resize((resize_w, resize_h), resample=Image.Resampling.LANCZOS)
+
+            paste_x = (target_w - resize_w) // 2
+            paste_y = (target_h - resize_h) // 2
+
+            new_image.paste(resized_img, (paste_x, paste_y))
+
+            result_tensor = pil2tensor(new_image)
+            image_list.append(result_tensor)
+
+        out_images = torch.cat(image_list, dim=0)
+        return (out_images,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Light-Tool: ResizeImage": ResizeImage,
     "Light-Tool: ResizeImageV2": ResizeImageV2,
     "Light-Tool: ResizeImageByRatio": ResizeImageByRatio,
     "Light-Tool: ResizeImageByMaxSize": ResizeImageByMaxSize,
-    "Light-Tool: ResizeImageByMinSize": ResizeImageByMinSize
+    "Light-Tool: ResizeImageByMinSize": ResizeImageByMinSize,
+    "Light-Tool: AspectRatioPadder": AspectRatioPadder
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -288,5 +380,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Light-Tool: ResizeImageV2": "Light-Tool: Resize Image V2",
     "Light-Tool: ResizeImageByRatio": "Light-Tool: Resize Image By Ratio",
     "Light-Tool: ResizeImageByMaxSize": "Light-Tool: Resize Image By Max Size",
-    "Light-Tool: ResizeImageByMinSize": "Light-Tool: Resize Image By Min Size"
+    "Light-Tool: ResizeImageByMinSize": "Light-Tool: Resize Image By Min Size",
+    "Light-Tool: AspectRatioPadder": "Light-Tool: Ratio Padder"
 }
