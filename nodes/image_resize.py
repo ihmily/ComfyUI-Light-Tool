@@ -44,24 +44,29 @@ class ResizeImage:
 
     @staticmethod
     def resize_img(image, width, height, resize_method, mode):
-        image = tensor2pil(image).convert(mode)
-        if width is None and height is None:
-            raise ValueError("Either new_width or new_height must be provided.")
-        elif width is not None and height is None:
-            height = int((width / image.width) * image.height)
-        elif height is not None and width is None:
-            width = int((height / image.height) * image.width)
+        image_list = []
+        for img in image:
+            img = tensor2pil(img).convert(mode)
+            if width is None and height is None:
+                raise ValueError("Either new_width or new_height must be provided.")
+            elif width is not None and height is None:
+                height = int((width / img.width) * img.height)
+            elif height is not None and width is None:
+                width = int((height / img.height) * img.width)
 
-        method = {
-            "LANCZOS": Image.LANCZOS,
-            "BICUBIC": Image.BICUBIC,
-            "NEAREST": Image.NEAREST,
-            "BILINEAR": Image.BILINEAR
-        }
+            method = {
+                "LANCZOS": Image.LANCZOS,
+                "BICUBIC": Image.BICUBIC,
+                "NEAREST": Image.NEAREST,
+                "BILINEAR": Image.BILINEAR
+            }
 
-        img_resized = image.resize((width, height), method[resize_method])
-        result_img = pil2tensor(img_resized)
-        return (result_img,)
+            img_resized = img.resize((width, height), method[resize_method])
+            result_img = pil2tensor(img_resized)
+            image_list.append(result_img)
+
+        image = torch.cat(image_list, dim=0)
+        return (image,)
 
 
 class ResizeImageV2:
@@ -89,28 +94,33 @@ class ResizeImageV2:
 
     @staticmethod
     def resize_img_v2(image, width, height, base, resize_method, mode):
-        image = tensor2pil(image).convert(mode)
+        image_list = []
+        for img in image:
+            img = tensor2pil(img).convert(mode)
 
-        method = {
-            "LANCZOS": Resampling.LANCZOS,
-            "BICUBIC": Resampling.BICUBIC,
-            "NEAREST": Resampling.NEAREST,
-            "BILINEAR": Resampling.BILINEAR
-        }
+            method = {
+                "LANCZOS": Resampling.LANCZOS,
+                "BICUBIC": Resampling.BICUBIC,
+                "NEAREST": Resampling.NEAREST,
+                "BILINEAR": Resampling.BILINEAR
+            }
 
-        original_width, original_height = image.size
+            original_width, original_height = img.size
 
-        if base == 'width':
-            w_percent = width / float(original_width)
-            new_height = int(float(original_height) * w_percent)
-            resized_img = image.resize((width, new_height), method[resize_method])
-        else:
-            w_percent = height / float(original_height)
-            new_width = int(float(original_width) * w_percent)
-            resized_img = image.resize((new_width, height), method[resize_method])
+            if base == 'width':
+                w_percent = width / float(original_width)
+                new_height = int(float(original_height) * w_percent)
+                resized_img = img.resize((width, new_height), method[resize_method])
+            else:
+                w_percent = height / float(original_height)
+                new_width = int(float(original_width) * w_percent)
+                resized_img = img.resize((new_width, height), method[resize_method])
 
-        result_img = pil2tensor(resized_img)
-        return (result_img,)
+            result_img = pil2tensor(resized_img)
+            image_list.append(result_img)
+
+        image = torch.cat(image_list, dim=0)
+        return (image,)
 
 
 class ResizeImageByMaxSize:
@@ -137,27 +147,32 @@ class ResizeImageByMaxSize:
 
     @staticmethod
     def resize_img_by_max_size(image, max_width, max_height, resize_method, mode):
-        image = tensor2pil(image).convert(mode)
+        image_list = []
+        for img in image:
+            img = tensor2pil(img).convert(mode)
 
-        method = {
-            "LANCZOS": Resampling.LANCZOS,
-            "BICUBIC": Resampling.BICUBIC,
-            "NEAREST": Resampling.NEAREST,
-            "BILINEAR": Resampling.BILINEAR
-        }
+            method = {
+                "LANCZOS": Resampling.LANCZOS,
+                "BICUBIC": Resampling.BICUBIC,
+                "NEAREST": Resampling.NEAREST,
+                "BILINEAR": Resampling.BILINEAR
+            }
 
-        original_width, original_height = image.size
-        ratio = min(max_width / original_width, max_height / original_height)
+            original_width, original_height = img.size
+            ratio = min(max_width / original_width, max_height / original_height)
 
-        if ratio >= 1:
-            return (pil2tensor(image),)
+            if ratio >= 1:
+                return (pil2tensor(img),)
 
-        new_width = int(original_width * ratio)
-        new_height = int(original_height * ratio)
+            new_width = int(original_width * ratio)
+            new_height = int(original_height * ratio)
 
-        resized_img = image.resize((new_width, new_height), method[resize_method])
-        result_img = pil2tensor(resized_img)
-        return (result_img,)
+            resized_img = img.resize((new_width, new_height), method[resize_method])
+            result_img = pil2tensor(resized_img)
+            image_list.append(result_img)
+
+        image = torch.cat(image_list, dim=0)
+        return (image,)
 
 
 class ResizeImageByMinSize:
@@ -185,29 +200,34 @@ class ResizeImageByMinSize:
 
     @staticmethod
     def resize_img_by_min_size(image, min_width, min_height, resize_method, mode):
-        image = tensor2pil(image).convert(mode)
+        image_list = []
+        for img in image:
+            img = tensor2pil(img).convert(mode)
 
-        method = {
-            "LANCZOS": Resampling.LANCZOS,
-            "BICUBIC": Resampling.BICUBIC,
-            "NEAREST": Resampling.NEAREST,
-            "BILINEAR": Resampling.BILINEAR
-        }
+            method = {
+                "LANCZOS": Resampling.LANCZOS,
+                "BICUBIC": Resampling.BICUBIC,
+                "NEAREST": Resampling.NEAREST,
+                "BILINEAR": Resampling.BILINEAR
+            }
 
-        original_width, original_height = image.size
-        ratio_w = min_width / original_width
-        ratio_h = min_height / original_height
-        ratio = max(ratio_w, ratio_h)
+            original_width, original_height = img.size
+            ratio_w = min_width / original_width
+            ratio_h = min_height / original_height
+            ratio = max(ratio_w, ratio_h)
 
-        if ratio <= 1:
-            return (pil2tensor(image),)
+            if ratio <= 1:
+                return (pil2tensor(img),)
 
-        new_width = int(original_width * ratio)
-        new_height = int(original_height * ratio)
+            new_width = int(original_width * ratio)
+            new_height = int(original_height * ratio)
 
-        resized_img = image.resize((new_width, new_height), method[resize_method])
-        result_img = pil2tensor(resized_img)
-        return (result_img,)
+            resized_img = img.resize((new_width, new_height), method[resize_method])
+            result_img = pil2tensor(resized_img)
+            image_list.append(result_img)
+
+        image = torch.cat(image_list, dim=0)
+        return (image,)
 
 
 class ResizeImageByRatio:
@@ -233,21 +253,26 @@ class ResizeImageByRatio:
 
     @staticmethod
     def resize_img_by_ratio(image, ratio, resize_method, mode):
-        image = tensor2pil(image).convert(mode)
+        image_list = []
+        for img in image:
+            img = tensor2pil(img).convert(mode)
 
-        method = {
-            "LANCZOS": Resampling.LANCZOS,
-            "BICUBIC": Resampling.BICUBIC,
-            "NEAREST": Resampling.NEAREST,
-            "BILINEAR": Resampling.BILINEAR
-        }
+            method = {
+                "LANCZOS": Resampling.LANCZOS,
+                "BICUBIC": Resampling.BICUBIC,
+                "NEAREST": Resampling.NEAREST,
+                "BILINEAR": Resampling.BILINEAR
+            }
 
-        original_width, original_height = image.size
-        new_width = int(original_width * ratio)
-        new_height = int(original_height * ratio)
-        resized_img = image.resize((new_width, new_height), method[resize_method])
-        result_img = pil2tensor(resized_img)
-        return (result_img,)
+            original_width, original_height = img.size
+            new_width = int(original_width * ratio)
+            new_height = int(original_height * ratio)
+            resized_img = img.resize((new_width, new_height), method[resize_method])
+            result_img = pil2tensor(resized_img)
+            image_list.append(result_img)
+
+        image = torch.cat(image_list, dim=0)
+        return (image,)
 
 
 NODE_CLASS_MAPPINGS = {
