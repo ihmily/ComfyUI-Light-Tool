@@ -1,6 +1,6 @@
 // Reference: https://github.com/ArtVentureX/comfyui-animatediff/blob/main/web/js/vid_preview.js
 import { app, ANIM_PREVIEW_WIDGET } from '../../../scripts/app.js';
-import { createImageHost } from "../../../scripts/ui/imagePreview.js"
+const { createImageHost } = window.comfyAPI.imagePreview;
 
 const BASE_SIZE = 768;
 
